@@ -136,7 +136,7 @@ while true; do
     local username=$(whoami)
 
     # Display the prompt with the username
-    echo -n "$username/IPNMT 2 shell> "
+    echo -n "${username}/IPNMT 2 shell> "
     read -r command
 
     # Split command and arguments
