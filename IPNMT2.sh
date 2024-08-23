@@ -31,6 +31,26 @@ display_help() {
     echo -e "  \033[34mscanip [domain]\033[0m - Resolve a domain to its IP addresses."
     echo -e "  \033[34mstartagent [port]\033[0m - Start an SSH server on the specified port."
     echo -e "  \033[34mforward [local_port] [remote_ip] [remote_port]\033[0m - Forward a local port to a remote IP and port."
+    echo -e "  \033[34mstatus\033[0m - Show the status of network interfaces and routing table."
+    echo -e "  \033[34mstats\033[0m - Show network statistics and packet statistics."
+    echo -e "  \033[34msaveconfig [name] [config]\033[0m - Save a configuration to a file."
+    echo -e "  \033[34mloadconfig [name]\033[0m - Load a configuration from a file."
+    echo -e "  \033[34mdnslookup [domain]\033[0m - Perform a DNS lookup for a domain."
+    echo -e "  \033[34mnmap [target]\033[0m - Scan a target using nmap."
+    echo -e "  \033[34mfirewall [action] [rule]\033[0m - Manage firewall rules (add/remove/list)."
+    echo -e "  \033[34msysteminfo\033[0m - Show system information."
+    echo -e "  \033[34muser [action] [username]\033[0m - Manage users (add/remove/check)."
+    echo -e "  \033[34mping [host]\033[0m - Ping a host to check connectivity."
+    echo -e "  \033[34mtraceroute [host]\033[0m - Trace the route to a host."
+    echo -e "  \033[34mbackup [source] [destination]\033[0m - Backup files or directories."
+    echo -e "  \033[34mrestore [source] [destination]\033[0m - Restore files or directories from a backup."
+    echo -e "  \033[34mdiskusage\033[0m - Show disk usage statistics."
+    echo -e "  \033[34mprocesslist\033[0m - List running processes."
+    echo -e "  \033[34mkill [pid]\033[0m - Kill a process by its PID."
+    echo -e "  \033[34mservice [service_name] [start/stop/restart/status]\033[0m - Manage system services."
+    echo -e "  \033[34mupdate\033[0m - Update system packages."
+    echo -e "  \033[34mupgrade\033[0m - Upgrade system packages."
+    echo -e "  \033[34mlog [filename]\033[0m - View or tail a log file."
     echo -e "  \033[34mhelp\033[0m - Show this help message."
     echo -e "  \033[34mexit\033[0m - Exit the custom shell."
 }
@@ -162,6 +182,250 @@ forward_port() {
     echo "Port $local_port is now being forwarded to $remote_ip:$remote_port (PID: $pid)"
 }
 
+# Function to show network status
+status() {
+    echo "Network Interfaces Status:"
+    ip link show
+    echo "Routing Table:"
+    ip route show
+}
+
+# Function to show network and packet statistics
+stats() {
+    echo "Network Statistics:"
+    ifstat
+    echo "Packet Statistics:"
+    netstat -i
+}
+
+# Function to save a configuration to a file
+save_config() {
+    local name=$1
+    local config=$2
+    if [[ -z "$name" || -z "$config" ]]; then
+        echo "Usage: saveconfig [name] [config]"
+        return
+    fi
+    echo "$config" > "${name}.conf"
+    echo "Configuration saved as ${name}.conf"
+}
+
+# Function to load a configuration from a file
+load_config() {
+    local name=$1
+    if [[ -z "$name" ]]; then
+        echo "Usage: loadconfig [name]"
+        return
+    fi
+    if [[ -f "${name}.conf" ]]; then
+        source "${name}.conf"
+        echo "Configuration loaded from ${name}.conf"
+    else
+        echo "Configuration file ${name}.conf not found."
+    fi
+}
+
+# Function to perform DNS lookup
+dns_lookup() {
+    local domain=$1
+    if [[ -z "$domain" ]]; then
+        echo "Usage: dnslookup [domain]"
+        return
+    fi
+    echo "Performing DNS lookup for domain $domain..."
+    dig +short "$domain"
+}
+
+# Function to scan a target using nmap
+nmap_scan() {
+    local target=$1
+    if [[ -z "$target" ]]; then
+        echo "Usage: nmap [target]"
+        return
+    fi
+    echo "Scanning target $target with nmap..."
+    nmap "$target"
+}
+
+# Function to manage firewall rules
+firewall() {
+    local action=$1
+    local rule=$2
+    if [[ -z "$action" || -z "$rule" ]]; then
+        echo "Usage: firewall [action] [rule] (action: add/remove/list)"
+        return
+    fi
+    case $action in
+        "add")
+            sudo iptables -A INPUT -p "$rule"
+            ;;
+        "remove")
+            sudo iptables -D INPUT -p "$rule"
+            ;;
+        "list")
+            sudo iptables -L
+            ;;
+        *)
+            echo "Unknown action: $action"
+            ;;
+    esac
+}
+
+# Function to show system information
+system_info() {
+    echo "System Information:"
+    echo "Hostname: $(hostname)"
+    echo "Uptime: $(uptime -p)"
+    echo "CPU Info: $(lscpu | grep 'Model name')"
+    echo "Memory Info: $(free -h)"
+    echo "Disk Info: $(df -h)"
+}
+
+# Function to manage users
+manage_user() {
+    local action=$1
+    local username=$2
+    if [[ -z "$action" || -z "$username" ]]; then
+        echo "Usage: user [action] [username] (action: add/remove/check)"
+        return
+    fi
+    case $action in
+        "add")
+            sudo useradd "$username"
+            echo "User $username added."
+            ;;
+        "remove")
+            sudo userdel "$username"
+            echo "User $username removed."
+            ;;
+        "check")
+            id "$username" &>/dev/null && echo "User $username exists." || echo "User $username does not exist."
+            ;;
+        *)
+            echo "Unknown action: $action"
+            ;;
+    esac
+}
+
+# Function to ping a host
+ping_host() {
+    local host=$1
+    if [[ -z "$host" ]]; then
+        echo "Usage: ping [host]"
+        return
+    fi
+    echo "Pinging $host..."
+    ping -c 4 "$host"
+}
+
+# Function to trace the route to a host
+trace_route() {
+    local host=$1
+    if [[ -z "$host" ]]; then
+        echo "Usage: traceroute [host]"
+        return
+    fi
+    echo "Tracing route to $host..."
+    traceroute "$host"
+}
+
+# Function to backup files or directories
+backup_files() {
+    local source=$1
+    local destination=$2
+    if [[ -z "$source" || -z "$destination" ]]; then
+        echo "Usage: backup [source] [destination]"
+        return
+    fi
+    echo "Backing up $source to $destination..."
+    cp -r "$source" "$destination"
+}
+
+# Function to restore files or directories from a backup
+restore_files() {
+    local source=$1
+    local destination=$2
+    if [[ -z "$source" || -z "$destination" ]]; then
+        echo "Usage: restore [source] [destination]"
+        return
+    fi
+    echo "Restoring $source to $destination..."
+    cp -r "$source" "$destination"
+}
+
+# Function to show disk usage statistics
+disk_usage() {
+    echo "Disk Usage Statistics:"
+    df -h
+}
+
+# Function to list running processes
+process_list() {
+    echo "Running Processes:"
+    ps aux
+}
+
+# Function to kill a process by its PID
+kill_process() {
+    local pid=$1
+    if [[ -z "$pid" ]]; then
+        echo "Usage: kill [pid]"
+        return
+    fi
+    echo "Killing process $pid..."
+    kill "$pid"
+}
+
+# Function to manage system services
+manage_service() {
+    local service_name=$1
+    local action=$2
+    if [[ -z "$service_name" || -z "$action" ]]; then
+        echo "Usage: service [service_name] [start/stop/restart/status]"
+        return
+    fi
+    case $action in
+        "start")
+            sudo systemctl start "$service_name"
+            ;;
+        "stop")
+            sudo systemctl stop "$service_name"
+            ;;
+        "restart")
+            sudo systemctl restart "$service_name"
+            ;;
+        "status")
+            sudo systemctl status "$service_name"
+            ;;
+        *)
+            echo "Unknown action: $action"
+            ;;
+    esac
+}
+
+# Function to update system packages
+update_system() {
+    echo "Updating system packages..."
+    sudo apt update
+}
+
+# Function to upgrade system packages
+upgrade_system() {
+    echo "Upgrading system packages..."
+    sudo apt upgrade -y
+}
+
+# Function to view or tail a log file
+view_log() {
+    local filename=$1
+    if [[ -z "$filename" ]]; then
+        echo "Usage: log [filename]"
+        return
+    fi
+    echo "Viewing log file $filename..."
+    tail -f "$filename"
+}
+
 # Start custom shell loop
 while true; do
     # Clear the screen and display the logo
@@ -211,6 +475,66 @@ while true; do
             ;;
         "forward")
             forward_port ${command_args[1]} ${command_args[2]} ${command_args[3]}
+            ;;
+        "status")
+            status
+            ;;
+        "stats")
+            stats
+            ;;
+        "saveconfig")
+            save_config ${command_args[1]} "${command_args[@]:2}"
+            ;;
+        "loadconfig")
+            load_config "${command_args[1]}"
+            ;;
+        "dnslookup")
+            dns_lookup "$args"
+            ;;
+        "nmap")
+            nmap_scan "$args"
+            ;;
+        "firewall")
+            firewall ${command_args[1]} "${command_args[@]:2}"
+            ;;
+        "systeminfo")
+            system_info
+            ;;
+        "user")
+            manage_user ${command_args[1]} "${command_args[2]}"
+            ;;
+        "ping")
+            ping_host "$args"
+            ;;
+        "traceroute")
+            trace_route "$args"
+            ;;
+        "backup")
+            backup_files ${command_args[1]} ${command_args[2]}
+            ;;
+        "restore")
+            restore_files ${command_args[1]} ${command_args[2]}
+            ;;
+        "diskusage")
+            disk_usage
+            ;;
+        "processlist")
+            process_list
+            ;;
+        "kill")
+            kill_process "$args"
+            ;;
+        "service")
+            manage_service ${command_args[1]} "${command_args[2]}"
+            ;;
+        "update")
+            update_system
+            ;;
+        "upgrade")
+            upgrade_system
+            ;;
+        "log")
+            view_log "$args"
             ;;
         "help")
             display_help
