@@ -169,10 +169,10 @@ while true; do
     display_logo
 
     # Get the username
-    local username=$(whoami)
+    username=$(whoami)
 
     # Display the prompt with the username
-    echo -n "${username}/IPNMT 2 shell> "
+    echo -n "$username/IPNMT 2 shell> "
     read -r command
 
     # Split command and arguments
