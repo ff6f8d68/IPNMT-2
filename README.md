@@ -19,18 +19,18 @@ Commands
 Here is a list of available commands you can use within the IPNMT 2 shell:
 
 General Commands
-´ hello - Greet the user.
-´ date - Show the current date and time.
-´ ipnmt - Display information about IPNMT 2.
-´ help - Show help information.
-´ exit - Exit the custom shell.
-´ Network Commands
-´ scan - Scan for devices in the current network.
-´ list - List network interfaces with IP addresses and MAC addresses.
-´ connect [ip] - SSH connect to the specified IP address.
-´ kick [ip] - Kick the specified IP address out of the network.
-´ scanip [domain] - Resolve a domain to its IP addresses.
-´ startagent [port] - Start an SSH server on the specified port.
+´ hello - Greet the user.´ 
+´ date - Show the current date and time.´ 
+´ ipnmt - Display information about IPNMT 2.´ 
+´ help - Show help information.´ 
+´ exit - Exit the custom shell.´ 
+´ Network Commands´ 
+´ scan - Scan for devices in the current network.´ 
+´ list - List network interfaces with IP addresses and MAC addresses.´ 
+´ connect [ip] - SSH connect to the specified IP address.´ 
+´ kick [ip] - Kick the specified IP address out of the network.´ 
+´ scanip [domain] - Resolve a domain to its IP addresses.´ 
+´ startagent [port] - Start an SSH server on the specified port.´ 
 ´ forward [local_port] [remote_ip] [remote_port] - Forward a local port to a remote IP and port.
 ´ status - Show the status of network interfaces and routing table.
 ´ stats - Show network statistics and packet statistics.
