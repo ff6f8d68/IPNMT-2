@@ -2,7 +2,7 @@
 
 # Set variables
 REPO_URL="https://github.com/yourusername/yourrepository.git"
-CLONE_DIR="/tmp/yourrepository"
+CLONE_DIR="/tmp/IPNMT2"
 INSTALL_DIR="/usr/local/yourrepository"
 
 # Exit on any error
@@ -33,3 +33,4 @@ echo "Setting execute permissions for scripts in $INSTALL_DIR"
 find "$INSTALL_DIR" -type f -name "*.sh" -exec chmod +x {} \;
 
 echo "Installation complete. You can now run the scripts from $INSTALL_DIR."
+echo 'PATH="/usr/local/bin:$PATH"' >> ~/.bash_profile
