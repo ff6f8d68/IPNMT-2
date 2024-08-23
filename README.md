@@ -58,5 +58,6 @@ Here is a list of available commands you can use within the IPNMT 2 shell:
 Commands must be entered exactly as specified. Incorrect usage or missing arguments may result in errors or unintended behavior.
 Some commands require sudo privileges.
 License
+## info
 
-This script is provided as-is. Use it at your own risk. For any modifications or contributions, please adhere to best practices and ensure compatibility with your system.
+how well and how this tool runs depents on your OS
