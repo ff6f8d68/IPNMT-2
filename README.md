@@ -11,6 +11,14 @@
 
 # IPNMT 2
 
+## info
+
+how well and how this tool runs depents on your OS
+
+i got the idea from here: https://youtu.be/Xv6U2I7Fj_o?t=780
+
+IPNMT2.1_windows.bat currently doesnt work to use this on windows download IPNMT2.1_linux.sh and run it with git
+
 ## Overview
 
 IPNMT 2 is a custom shell script designed for IP Network Management. It provides various network and system management functionalities including network scanning, SSH connections, firewall management, and more.
@@ -69,8 +77,4 @@ Here is a list of available commands you can use within the IPNMT 2 shell:
 Commands must be entered exactly as specified. Incorrect usage or missing arguments may result in errors or unintended behavior.
 Some commands require sudo privileges.
 License
-## info
 
-how well and how this tool runs depents on your OS
-
-i got the idea from here: https://youtu.be/Xv6U2I7Fj_o?t=780
