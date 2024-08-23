@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Set variables
-REPO_URL="https://github.com/yourusername/yourrepository.git"
+REPO_URL="https://github.com/ff6f8d68/IPNMT-2.git"
 CLONE_DIR="/tmp/IPNMT2"
-INSTALL_DIR="/usr/local/yourrepository"
+INSTALL_DIR="/usr/local/IPNMT2"
 
 # Exit on any error
 set -e
