@@ -33,4 +33,6 @@ echo "Setting execute permissions for scripts in $INSTALL_DIR"
 find "$INSTALL_DIR" -type f -name "*.sh" -exec chmod +x {} \;
 
 echo "Installation complete. You can now run the scripts from $INSTALL_DIR."
+echo "
+"
 echo 'PATH="/usr/local/bin:$PATH"' >> ~/.bash_profile
