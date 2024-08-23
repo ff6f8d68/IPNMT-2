@@ -30,22 +30,21 @@ display_help() {
     echo -e "  \033[34mkick [ip]\033[0m - Kick the specified IP address out of the network."
     echo -e "  \033[34mscanip [domain]\033[0m - Resolve a domain to its IP addresses."
     echo -e "  \033[34mstartagent [port]\033[0m - Start an SSH server on the specified port."
+    echo -e "  \033[34mforward [local_port] [remote_ip] [remote_port]\033[0m - Forward a local port to a remote IP and port."
     echo -e "  \033[34mhelp\033[0m - Show this help message."
     echo -e "  \033[34mexit\033[0m - Exit the custom shell."
 }
 
 # Function to list network interfaces with IP addresses and MAC addresses
 list_network_info() {
- #!/bin/bash
-
-printf '%10s %32s %32s\n' interface ipaddress macaddress
-printf '%s\n' '----------------------------------------------------------------------------'
-for each in $(ip address | grep -oP '(^[\d]+:\s)\K[\d\w]+'); do
-  mac=$(ip address show ${each} | grep -oP '(?<=link/ether\s)\K[\da-f:]+|(?<=link/loopback\s)\K[\da-f:]+')
-  for address in $(ip address show ${each} | grep -oP '(?<=inet\s)\K[\d.]+|(?<=inet6\s)\K[\da-f:]+'); do
-    printf '%10s %32s %32s\n' ${each} ${address} ${mac}
-  done
-done
+    printf '%10s %32s %32s\n' interface ipaddress macaddress
+    printf '%s\n' '----------------------------------------------------------------------------'
+    for each in $(ip address | grep -oP '(^[\d]+:\s)\K[\d\w]+'); do
+        mac=$(ip address show ${each} | grep -oP '(?<=link/ether\s)\K[\da-f:]+|(?<=link/loopback\s)\K[\da-f:]+')
+        for address in $(ip address show ${each} | grep -oP '(?<=inet\s)\K[\d.]+|(?<=inet6\s)\K[\da-f:]+'); do
+            printf '%10s %32s %32s\n' ${each} ${address} ${mac}
+        done
+    done
 }
 
 # Function to scan the network for devices
@@ -116,14 +115,51 @@ connect_ssh() {
 
 # Function to start an SSH agent on a specified port
 start_agent() {
+    local port=$1
+    
+    if [[ -z "$port" ]]; then
+        echo "Usage: startagent [port]"
+        echo "Example: startagent 22"
+        return
+    fi
+
     sudo systemctl start sshd
     sudo systemctl enable sshd
-    echo "connect with the IP:"
+    echo "Connect with the IP:"
     curl ifconfig.me
-    echo "
-    "
-    echo "and the username:"
+    echo ""
+    echo "And the username:"
     whoami
+    echo ""
+    echo "The SSH server is running on port $port."
+}
+
+# Function to forward a local port to a remote IP and port
+forward_port() {
+    local local_port=$1
+    local remote_ip=$2
+    local remote_port=$3
+
+    if [[ -z "$local_port" || -z "$remote_ip" || -z "$remote_port" ]]; then
+        echo "Usage: forward [local_port] [remote_ip] [remote_port]"
+        echo "Example: forward 8080 192.168.1.100 80"
+        return
+    fi
+
+    echo "Forwarding local port $local_port to $remote_ip:$remote_port..."
+    
+    # Create SSH tunnel
+    ssh -L "$local_port:localhost:$remote_port" "$remote_ip" -N &
+    
+    # Capture the PID of the SSH tunnel
+    local pid=$!
+    
+    if [[ $? -ne 0 ]]; then
+        echo "Failed to establish port forwarding."
+        return
+    fi
+    
+    echo "Port $local_port is now being forwarded to $remote_ip:$remote_port (PID: $pid)"
 }
 
 # Start custom shell loop
@@ -172,6 +208,9 @@ while true; do
             ;;
         "startagent")
             start_agent "$args"
+            ;;
+        "forward")
+            forward_port ${command_args[1]} ${command_args[2]} ${command_args[3]}
             ;;
         "help")
             display_help
