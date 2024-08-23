@@ -14,14 +14,6 @@ IPNMT 2 is a custom shell script designed for IP Network Management. It provides
 - Log file viewing and tailing
 
 ## Usage
-
-To run the script, make sure it is executable and then execute it from your terminal:
-
-```bash
-chmod +x ipnmt2.sh
-./ipnmt2.sh
-The script will start a custom shell interface where you can enter commands.
-
 Commands
 
 Here is a list of available commands you can use within the IPNMT 2 shell:
