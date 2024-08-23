@@ -1,7 +1,8 @@
 
 
 
-![Screenshot 2024-08-23 at 12 40 16 PM](https://github.com/user-attachments/assets/c6191745-2d46-42a2-91a0-d55508fd5767)
+![Screenshot_2024-08-18_at_1 00 28_PM-removebg-preview](https://github.com/user-attachments/assets/2c382112-e460-4ef3-b6c0-126e98c71c97)
+
 
 
 
