@@ -17,7 +17,7 @@ IPNMT 2 is a custom shell script designed for IP Network Management. It provides
 
 ## Features
 
-- Display logo and information about IPNMT 2
+
 - Network management commands such as scanning, listing interfaces, and resolving domains
 - System management commands including user management, service control, and system updates
 - Backup and restore functionalities
