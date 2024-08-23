@@ -22,10 +22,10 @@ Commands
 Here is a list of available commands you can use within the IPNMT 2 shell:
 
 General Commands
-hello - Greet the user.
-date - Show the current date and time.
-ipnmt - Display information about IPNMT 2.
-help - Show help information.
+- hello - Greet the user.
+- date - Show the current date and time.
+- ipnmt - Display information about IPNMT 2.
+- help - Show help information.
 exit - Exit the custom shell.
 Network Commands
 scan - Scan for devices in the current network.
