@@ -238,7 +238,8 @@ load_config() {
 
 # Main loop for custom shell
 while true; do
-    echo -n "Enter command (type 'help' for available commands): "
+    username=$(whoami)
+    echo -n "$username/IPNMT 2 shell> "
     read -r command args
 
     case "$command" in
