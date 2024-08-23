@@ -1,7 +1,10 @@
+#!/bin/bash
+
 # Function to display the logo and IPNMT 2 information
-function Display-Logo {
-    Write-Host "`e[34m"
-    Write-Host @"
+display_logo() {
+    echo -e "\033[34m"
+    cat << "EOF"
+
  ___  ________  ________   _____ ______   _________         _______     
 |\  \|\   __  \|\   ___  \|\   _ \  _   \|\___   ___\      /  ___  \    
 \ \  \ \  \|\  \ \  \\ \  \ \  \\\__\ \  \|___ \  \_|     /__/|_/  /|   
@@ -11,439 +14,540 @@ function Display-Logo {
     \|__|\|__|     \|__| \|__|\|__|     \|__|    \|__|        \|_______|
 
 EOF
-    Write-Host "`e[0m"
-    Write-Host "`e[34mIPNMT 2: IP Network Management Tool 2`e[0m"
+    echo -e "\033[0m"
+    echo -e "\033[34mIPNMT 2: IP Network Management Tool 2\033[0m"
 }
 
 # Function to display help information
-function Display-Help {
-    Write-Host "`e[34mAvailable Commands:`e[0m"
-    Write-Host "  `e[34mhello` `e[0m- Greet the user."
-    Write-Host "  `e[34mdate` `e[0m- Show the current date and time."
-    Write-Host "  `e[34mipnmt` `e[0m- Display information about IPNMT 2."
-    Write-Host "  `e[34mscan` `e[0m- Scan for devices in the current network."
-    Write-Host "  `e[34mlist` `e[0m- List network interfaces with IP addresses and MAC addresses."
-    Write-Host "  `e[34mconnect [ip]` `e[0m- SSH connect to the specified IP address."
-    Write-Host "  `e[34mkick [ip]` `e[0m- Kick the specified IP address out of the network."
-    Write-Host "  `e[34mscanip [domain]` `e[0m- Resolve a domain to its IP addresses."
-    Write-Host "  `e[34mstartagent [port]` `e[0m- Start an SSH server on the specified port."
-    Write-Host "  `e[34mforward [local_port] [remote_ip] [remote_port]` `e[0m- Forward a local port to a remote IP and port."
-    Write-Host "  `e[34mstatus` `e[0m- Show the status of network interfaces and routing table."
-    Write-Host "  `e[34mstats` `e[0m- Show network statistics and packet statistics."
-    Write-Host "  `e[34msaveconfig [name] [config]` `e[0m- Save a configuration to a file."
-    Write-Host "  `e[34mloadconfig [name]` `e[0m- Load a configuration from a file."
-    Write-Host "  `e[34mdnslookup [domain]` `e[0m- Perform a DNS lookup for a domain."
-    Write-Host "  `e[34mnmap [target]` `e[0m- Scan a target using nmap."
-    Write-Host "  `e[34mfirewall [action] [rule]` `e[0m- Manage firewall rules (add/remove/list)."
-    Write-Host "  `e[34msysteminfo` `e[0m- Show system information."
-    Write-Host "  `e[34muser [action] [username]` `e[0m- Manage users (add/remove/check)."
-    Write-Host "  `e[34mping [host]` `e[0m- Ping a host to check connectivity."
-    Write-Host "  `e[34mtraceroute [host]` `e[0m- Trace the route to a host."
-    Write-Host "  `e[34mbackup [source] [destination]` `e[0m- Backup files or directories."
-    Write-Host "  `e[34mrestore [source] [destination]` `e[0m- Restore files or directories from a backup."
-    Write-Host "  `e[34mdiskusage` `e[0m- Show disk usage statistics."
-    Write-Host "  `e[34mprocesslist` `e[0m- List running processes."
-    Write-Host "  `e[34mkill [pid]` `e[0m- Kill a process by its PID."
-    Write-Host "  `e[34mservice [service_name] [start/stop/restart/status]` `e[0m- Manage system services."
-    Write-Host "  `e[34mupdate` `e[0m- Update system packages."
-    Write-Host "  `e[34mupgrade` `e[0m- Upgrade system packages."
-    Write-Host "  `e[34mlog [filename]` `e[0m- View or tail a log file."
-    Write-Host "  `e[34mhelp` `e[0m- Show this help message."
-    Write-Host "  `e[34mexit` `e[0m- Exit the custom shell."
+display_help() {
+    echo -e "\033[34mAvailable Commands:\033[0m"
+    echo -e "  \033[34mhello\033[0m - Greet the user."
+    echo -e "  \033[34mdate\033[0m - Show the current date and time."
+    echo -e "  \033[34mipnmt\033[0m - Display information about IPNMT 2."
+    echo -e "  \033[34mscan\033[0m - Scan for devices in the current network."
+    echo -e "  \033[34mlist\033[0m - List network interfaces with IP addresses and MAC addresses."
+    echo -e "  \033[34mconnect [ip]\033[0m - SSH connect to the specified IP address."
+    echo -e "  \033[34mkick [ip]\033[0m - Kick the specified IP address out of the network."
+    echo -e "  \033[34mscanip [domain]\033[0m - Resolve a domain to its IP addresses."
+    echo -e "  \033[34mstartagent [port]\033[0m - Start an SSH server on the specified port."
+    echo -e "  \033[34mforward [local_port] [remote_ip] [remote_port]\033[0m - Forward a local port to a remote IP and port."
+    echo -e "  \033[34mstatus\033[0m - Show the status of network interfaces and routing table."
+    echo -e "  \033[34mstats\033[0m - Show network statistics and packet statistics."
+    echo -e "  \033[34msaveconfig [name] [config]\033[0m - Save a configuration to a file."
+    echo -e "  \033[34mloadconfig [name]\033[0m - Load a configuration from a file."
+    echo -e "  \033[34mdnslookup [domain]\033[0m - Perform a DNS lookup for a domain."
+    echo -e "  \033[34mnmap [target]\033[0m - Scan a target using nmap."
+    echo -e "  \033[34mfirewall [action] [rule]\033[0m - Manage firewall rules (add/remove/list)."
+    echo -e "  \033[34msysteminfo\033[0m - Show system information."
+    echo -e "  \033[34muser [action] [username]\033[0m - Manage users (add/remove/check)."
+    echo -e "  \033[34mping [host]\033[0m - Ping a host to check connectivity."
+    echo -e "  \033[34mtraceroute [host]\033[0m - Trace the route to a host."
+    echo -e "  \033[34mbackup [source] [destination]\033[0m - Backup files or directories."
+    echo -e "  \033[34mrestore [source] [destination]\033[0m - Restore files or directories from a backup."
+    echo -e "  \033[34mdiskusage\033[0m - Show disk usage statistics."
+    echo -e "  \033[34mprocesslist\033[0m - List running processes."
+    echo -e "  \033[34mkill [pid]\033[0m - Kill a process by its PID."
+    echo -e "  \033[34mservice [service_name] [start/stop/restart/status]\033[0m - Manage system services."
+    echo -e "  \033[34mupdate\033[0m - Update system packages."
+    echo -e "  \033[34mupgrade\033[0m - Upgrade system packages."
+    echo -e "  \033[34mlog [filename]\033[0m - View or tail a log file."
+    echo -e "  \033[34mhelp\033[0m - Show this help message."
+    echo -e "  \033[34mexit\033[0m - Exit the custom shell."
 }
 
 # Function to list network interfaces with IP addresses and MAC addresses
-function List-NetworkInfo {
-    $networkInterfaces = Get-NetAdapter | Select-Object Name, MacAddress
-    $networkInterfaces | ForEach-Object {
-        $interfaceName = $_.Name
-        $macAddress = $_.MacAddress
-        $ipAddresses = (Get-NetIPAddress -InterfaceAlias $interfaceName).IPAddress
-        foreach ($ip in $ipAddresses) {
-            Write-Host "$interfaceName`t$ip`t$macAddress"
-        }
-    }
+list_network_info() {
+    printf '%10s %32s %32s\n' interface ipaddress macaddress
+    printf '%s\n' '----------------------------------------------------------------------------'
+    for each in $(ip address | grep -oP '(^[\d]+:\s)\K[\d\w]+'); do
+        mac=$(ip address show ${each} | grep -oP '(?<=link/ether\s)\K[\da-f:]+|(?<=link/loopback\s)\K[\da-f:]+')
+        for address in $(ip address show ${each} | grep -oP '(?<=inet\s)\K[\d.]+|(?<=inet6\s)\K[\da-f:]+'); do
+            printf '%10s %32s %32s\n' ${each} ${address} ${mac}
+        done
+    done
 }
 
 # Function to scan the network for devices
-function Scan-Network {
-    Write-Host "Scanning network for devices..."
-    arp -a
+scan_network() {
+    echo "Scanning network for devices..."
+    sudo arp -a
 }
 
 # Function to resolve a domain to its IP addresses
-function Scan-IP {
-    param (
-        [string]$domain
-    )
-    if (-not $domain) {
-        Write-Host "Usage: scanip [domain]"
-        Write-Host "Example: scanip www.example.com"
+scan_ip() {
+    local domain=$1
+    
+    if [[ -z "$domain" ]]; then
+        echo "Usage: scanip [domain]"
+        echo "Example: scanip www.example.com"
         return
-    }
-
-    Write-Host "Resolving domain $domain to IP addresses..."
-    [System.Net.Dns]::GetHostAddresses($domain) | ForEach-Object { Write-Host $_.IPAddressToString }
+    fi
+    
+    echo "Resolving domain $domain to IP addresses..."
+    
+    # Use dig to resolve the domain name
+    dig +short "$domain"
 }
 
 # Function to kick an IP address from the network
-function Kick-IP {
-    param (
-        [string]$ip
-    )
-    if (-not $ip) {
-        Write-Host "Usage: kick [ip]"
-        Write-Host "Example: kick 192.168.1.100"
+kick_ip() {
+    local ip=$1
+    
+    if [[ -z "$ip" ]]; then
+        echo "Usage: kick [ip]"
+        echo "Example: kick 192.168.1.100"
         return
-    }
-
-    Write-Host "Attempting to kick IP $ip from the network..."
-
-    # PowerShell does not have a direct equivalent for flushing ARP cache or resetting interfaces
-    Write-Host "Note: Flushing ARP cache and resetting network interfaces is not directly supported in PowerShell."
+    fi
+    
+    echo "Attempting to kick IP $ip from the network..."
+    
+    # Check if IP is in the ARP table
+    if ! arp -n | grep -q "$ip"; then
+        echo "IP $ip not found in ARP table."
+        return
+    fi
+    
+    # Flush ARP cache
+    sudo ip -s -s neigh flush all
+    
+    # Disconnect the network interface to refresh connections
+    local iface=$(ip route show default | awk '/default/ {print $5}')
+    sudo ip link set dev "$iface" down
+    sleep 2
+    sudo ip link set dev "$iface" up
+    
+    echo "IP $ip has been removed from ARP table and network interface has been reset."
 }
 
 # Function to connect to an IP address using SSH
-function Connect-SSH {
-    param (
-        [string]$ip
-    )
-    if (-not $ip) {
-        Write-Host "Usage: connect [ip]"
-        Write-Host "Example: connect 192.168.1.100"
-        return
-    }
+connect_ssh() {
+    local ip=$1
 
-    Write-Host "Connecting to $ip via SSH..."
-    ssh $ip
+    if [[ -z "$ip" ]]; then
+        echo "Usage: connect [ip]"
+        echo "Example: connect 192.168.1.100"
+        return
+    fi
+
+    echo "Connecting to $ip via SSH..."
+    ssh "$ip"
 }
 
 # Function to start an SSH agent on a specified port
-function Start-Agent {
-    param (
-        [string]$port
-    )
-    if (-not $port) {
-        Write-Host "Usage: startagent [port]"
-        Write-Host "Example: startagent 22"
+start_agent() {
+    local port=$1
+    
+    if [[ -z "$port" ]]; then
+        echo "Usage: startagent [port]"
+        echo "Example: startagent 22"
         return
-    }
+    fi
 
-    Write-Host "Starting SSH agent on port $port..."
-    # Note: SSH agent management is not directly available in PowerShell
+    sudo systemctl start sshd
+    sudo systemctl enable sshd
+    echo "Connect with the IP:"
+    curl ifconfig.me
+    echo ""
+    echo "And the username:"
+    whoami
+    echo ""
+    echo "The SSH server is running on port $port."
 }
 
 # Function to forward a local port to a remote IP and port
-function Forward-Port {
-    param (
-        [string]$localPort,
-        [string]$remoteIP,
-        [string]$remotePort
-    )
-    if (-not $localPort -or -not $remoteIP -or -not $remotePort) {
-        Write-Host "Usage: forward [local_port] [remote_ip] [remote_port]"
-        Write-Host "Example: forward 8080 192.168.1.100 80"
-        return
-    }
+forward_port() {
+    local local_port=$1
+    local remote_ip=$2
+    local remote_port=$3
 
-    Write-Host "Setting up port forwarding from local port $localPort to $remoteIP:$remotePort..."
-    # Note: Port forwarding setup requires configuration of network settings or firewall rules, not directly supported in PowerShell
+    if [[ -z "$local_port" || -z "$remote_ip" || -z "$remote_port" ]]; then
+        echo "Usage: forward [local_port] [remote_ip] [remote_port]"
+        echo "Example: forward 8080 192.168.1.100 80"
+        return
+    fi
+
+    echo "Forwarding local port $local_port to $remote_ip:$remote_port..."
+    
+    # Create SSH tunnel
+    ssh -L "$local_port:localhost:$remote_port" "$remote_ip" -N &
+    
+    # Capture the PID of the SSH tunnel
+    local pid=$!
+    
+    if [[ $? -ne 0 ]]; then
+        echo "Failed to establish port forwarding."
+        return
+    fi
+    
+    echo "Port $local_port is now being forwarded to $remote_ip:$remote_port (PID: $pid)"
 }
 
-# Function to show network interface and routing table status
-function Show-Status {
-    Write-Host "Showing network status..."
-    Get-NetIPAddress
-    Get-NetRoute
+# Function to show network status
+status() {
+    echo "Network Interfaces Status:"
+    ip link show
+    echo "Routing Table:"
+    ip route show
 }
 
 # Function to show network and packet statistics
-function Show-Stats {
-    Write-Host "Showing network statistics..."
-    netstat -e
+stats() {
+    echo "Network Statistics:"
+    ifstat
+    echo "Packet Statistics:"
+    netstat -i
 }
 
 # Function to save a configuration to a file
-function Save-Config {
-    param (
-        [string]$name,
-        [string]$config
-    )
-    if (-not $name -or -not $config) {
-        Write-Host "Usage: saveconfig [name] [config]"
-        Write-Host "Example: saveconfig myconfig '{`"setting1`":`"value1`"}'"
+save_config() {
+    local name=$1
+    local config=$2
+    if [[ -z "$name" || -z "$config" ]]; then
+        echo "Usage: saveconfig [name] [config]"
         return
-    }
-
-    Write-Host "Saving configuration $name to file..."
-    $config | Out-File "$name.config"
+    fi
+    echo "$config" > "${name}.conf"
+    echo "Configuration saved as ${name}.conf"
 }
 
 # Function to load a configuration from a file
-function Load-Config {
-    param (
-        [string]$name
-    )
-    if (-not $name) {
-        Write-Host "Usage: loadconfig [name]"
-        Write-Host "Example: loadconfig myconfig"
+load_config() {
+    local name=$1
+    if [[ -z "$name" ]]; then
+        echo "Usage: loadconfig [name]"
         return
-    }
-
-    Write-Host "Loading configuration $name from file..."
-    Get-Content "$name.config"
+    fi
+    if [[ -f "${name}.conf" ]]; then
+        source "${name}.conf"
+        echo "Configuration loaded from ${name}.conf"
+    else
+        echo "Configuration file ${name}.conf not found."
+    fi
 }
 
-# Function to perform DNS lookup for a domain
-function DnsLookup {
-    param (
-        [string]$domain
-    )
-    if (-not $domain) {
-        Write-Host "Usage: dnslookup [domain]"
-        Write-Host "Example: dnslookup www.example.com"
+# Function to perform DNS lookup
+dns_lookup() {
+    local domain=$1
+    if [[ -z "$domain" ]]; then
+        echo "Usage: dnslookup [domain]"
         return
-    }
-
-    Write-Host "Performing DNS lookup for $domain..."
-    Resolve-DnsName $domain
+    fi
+    echo "Performing DNS lookup for domain $domain..."
+    dig +short "$domain"
 }
 
-# Function to perform a network scan using nmap (assuming nmap is installed and accessible)
-function NmapScan {
-    param (
-        [string]$target
-    )
-    if (-not $target) {
-        Write-Host "Usage: nmap [target]"
-        Write-Host "Example: nmap 192.168.1.1"
+# Function to scan a target using nmap
+nmap_scan() {
+    local target=$1
+    if [[ -z "$target" ]]; then
+        echo "Usage: nmap [target]"
         return
-    }
-
-    Write-Host "Scanning target $target with nmap..."
-    nmap $target
+    fi
+    echo "Scanning target $target with nmap..."
+    nmap "$target"
 }
 
 # Function to manage firewall rules
-function Manage-Firewall {
-    param (
-        [string]$action,
-        [string]$rule
-    )
-    if (-not $action -or -not $rule) {
-        Write-Host "Usage: firewall [action] [rule]"
-        Write-Host "Example: firewall add 'Allow TCP Port 80'"
+firewall() {
+    local action=$1
+    local rule=$2
+    if [[ -z "$action" || -z "$rule" ]]; then
+        echo "Usage: firewall [action] [rule] (action: add/remove/list)"
         return
-    }
-
-    Write-Host "Managing firewall rule: Action=$action, Rule=$rule"
-    # Note: Firewall management requires use of netsh or other tools
+    fi
+    case $action in
+        "add")
+            sudo iptables -A INPUT -p "$rule"
+            ;;
+        "remove")
+            sudo iptables -D INPUT -p "$rule"
+            ;;
+        "list")
+            sudo iptables -L
+            ;;
+        *)
+            echo "Unknown action: $action"
+            ;;
+    esac
 }
 
 # Function to show system information
-function Show-SystemInfo {
-    Write-Host "Showing system information..."
-    systeminfo
+system_info() {
+    echo "System Information:"
+    echo "Hostname: $(hostname)"
+    echo "Uptime: $(uptime -p)"
+    echo "CPU Info: $(lscpu | grep 'Model name')"
+    echo "Memory Info: $(free -h)"
+    echo "Disk Info: $(df -h)"
 }
 
 # Function to manage users
-function Manage-User {
-    param (
-        [string]$action,
-        [string]$username
-    )
-    if (-not $action -or -not $username) {
-        Write-Host "Usage: user [action] [username]"
-        Write-Host "Example: user add newuser"
+manage_user() {
+    local action=$1
+    local username=$2
+    if [[ -z "$action" || -z "$username" ]]; then
+        echo "Usage: user [action] [username] (action: add/remove/check)"
         return
-    }
-
-    Write-Host "Managing user: Action=$action, Username=$username"
-    # Note: User management requires use of user-related cmdlets or tools
+    fi
+    case $action in
+        "add")
+            sudo useradd "$username"
+            echo "User $username added."
+            ;;
+        "remove")
+            sudo userdel "$username"
+            echo "User $username removed."
+            ;;
+        "check")
+            id "$username" &>/dev/null && echo "User $username exists." || echo "User $username does not exist."
+            ;;
+        *)
+            echo "Unknown action: $action"
+            ;;
+    esac
 }
 
 # Function to ping a host
-function Ping-Host {
-    param (
-        [string]$host
-    )
-    if (-not $host) {
-        Write-Host "Usage: ping [host]"
-        Write-Host "Example: ping www.example.com"
+ping_host() {
+    local host=$1
+    if [[ -z "$host" ]]; then
+        echo "Usage: ping [host]"
         return
-    }
-
-    Write-Host "Pinging host $host..."
-    Test-Connection $host -Count 4
+    fi
+    echo "Pinging $host..."
+    ping -c 4 "$host"
 }
 
 # Function to trace the route to a host
-function Trace-Route {
-    param (
-        [string]$host
-    )
-    if (-not $host) {
-        Write-Host "Usage: traceroute [host]"
-        Write-Host "Example: traceroute www.example.com"
+trace_route() {
+    local host=$1
+    if [[ -z "$host" ]]; then
+        echo "Usage: traceroute [host]"
         return
-    }
-
-    Write-Host "Tracing route to $host..."
-    Test-Connection $host -Traceroute
+    fi
+    echo "Tracing route to $host..."
+    traceroute "$host"
 }
 
-# Function to back up files or directories
-function Backup {
-    param (
-        [string]$source,
-        [string]$destination
-    )
-    if (-not $source -or -not $destination) {
-        Write-Host "Usage: backup [source] [destination]"
-        Write-Host "Example: backup C:\data D:\backup"
+# Function to backup files or directories
+backup_files() {
+    local source=$1
+    local destination=$2
+    if [[ -z "$source" || -z "$destination" ]]; then
+        echo "Usage: backup [source] [destination]"
         return
-    }
-
-    Write-Host "Backing up $source to $destination..."
-    Copy-Item -Path $source -Destination $destination -Recurse
+    fi
+    echo "Backing up $source to $destination..."
+    cp -r "$source" "$destination"
 }
 
 # Function to restore files or directories from a backup
-function Restore {
-    param (
-        [string]$source,
-        [string]$destination
-    )
-    if (-not $source -or -not $destination) {
-        Write-Host "Usage: restore [source] [destination]"
-        Write-Host "Example: restore D:\backup C:\data"
+restore_files() {
+    local source=$1
+    local destination=$2
+    if [[ -z "$source" || -z "$destination" ]]; then
+        echo "Usage: restore [source] [destination]"
         return
-    }
-
-    Write-Host "Restoring $source to $destination..."
-    Copy-Item -Path $source -Destination $destination -Recurse
+    fi
+    echo "Restoring $source to $destination..."
+    cp -r "$source" "$destination"
 }
 
 # Function to show disk usage statistics
-function Disk-Usage {
-    Write-Host "Showing disk usage..."
-    Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{Name="Used(GB)";Expression={[math]::round($_.Used/1GB,2)}}, @{Name="Free(GB)";Expression={[math]::round($_.Used/1GB,2)}}, @{Name="Used(%)";Expression={[math]::round($_.Used/$_.Used*100,2)}}
+disk_usage() {
+    echo "Disk Usage Statistics:"
+    df -h
 }
 
 # Function to list running processes
-function Process-List {
-    Write-Host "Listing running processes..."
-    Get-Process
+process_list() {
+    echo "Running Processes:"
+    ps aux
 }
 
-# Function to kill a process by PID
-function Kill-Process {
-    param (
-        [int]$pid
-    )
-    if (-not $pid) {
-        Write-Host "Usage: kill [pid]"
-        Write-Host "Example: kill 1234"
+# Function to kill a process by its PID
+kill_process() {
+    local pid=$1
+    if [[ -z "$pid" ]]; then
+        echo "Usage: kill [pid]"
         return
-    }
-
-    Write-Host "Killing process with PID $pid..."
-    Stop-Process -Id $pid
+    fi
+    echo "Killing process $pid..."
+    kill "$pid"
 }
 
 # Function to manage system services
-function Manage-Service {
-    param (
-        [string]$serviceName,
-        [string]$action
-    )
-    if (-not $serviceName -or -not $action) {
-        Write-Host "Usage: service [service_name] [start/stop/restart/status]"
-        Write-Host "Example: service wuauserv start"
+manage_service() {
+    local service_name=$1
+    local action=$2
+    if [[ -z "$service_name" || -z "$action" ]]; then
+        echo "Usage: service [service_name] [start/stop/restart/status]"
         return
-    }
-
-    Write-Host "Managing service $serviceName: Action=$action"
-    switch ($action) {
-        "start" { Start-Service -Name $serviceName }
-        "stop" { Stop-Service -Name $serviceName }
-        "restart" { Restart-Service -Name $serviceName }
-        "status" { Get-Service -Name $serviceName }
-        default { Write-Host "Unknown action. Use start, stop, restart, or status." }
-    }
+    fi
+    case $action in
+        "start")
+            sudo systemctl start "$service_name"
+            ;;
+        "stop")
+            sudo systemctl stop "$service_name"
+            ;;
+        "restart")
+            sudo systemctl restart "$service_name"
+            ;;
+        "status")
+            sudo systemctl status "$service_name"
+            ;;
+        *)
+            echo "Unknown action: $action"
+            ;;
+    esac
 }
 
 # Function to update system packages
-function Update-System {
-    Write-Host "Updating system packages..."
-    # Windows does not have a direct equivalent to 'apt-get update' or 'yum update'
+update_system() {
+    echo "Updating system packages..."
+    sudo apt update
 }
 
 # Function to upgrade system packages
-function Upgrade-System {
-    Write-Host "Upgrading system packages..."
-    # Windows does not have a direct equivalent to 'apt-get upgrade' or 'yum upgrade'
+upgrade_system() {
+    echo "Upgrading system packages..."
+    sudo apt upgrade -y
 }
 
 # Function to view or tail a log file
-function View-Log {
-    param (
-        [string]$filename
-    )
-    if (-not $filename) {
-        Write-Host "Usage: log [filename]"
-        Write-Host "Example: log C:\logs\system.log"
+view_log() {
+    local filename=$1
+    if [[ -z "$filename" ]]; then
+        echo "Usage: log [filename]"
         return
-    }
-
-    Write-Host "Viewing log file $filename..."
-    Get-Content -Path $filename -Tail 10
+    fi
+    echo "Viewing log file $filename..."
+    tail -f "$filename"
 }
 
-# Main loop for custom shell
-function Custom-Shell {
-    Display-Logo
+# Start custom shell loop
+while true; do
+    # Clear the screen and display the logo
+    clear
+    display_logo
 
-    while ($true) {
-        $input = Read-Host "IPNMT 2 Shell"
-        $args = $input -split ' '
+    # Get the username
+    username=$(whoami)
 
-        switch ($args[0]) {
-            "hello" { Write-Host "Hello, user!" }
-            "date" { Get-Date }
-            "ipnmt" { Display-Logo }
-            "scan" { Scan-Network }
-            "list" { List-NetworkInfo }
-            "connect" { Connect-SSH -ip $args[1] }
-            "kick" { Kick-IP -ip $args[1] }
-            "scanip" { Scan-IP -domain $args[1] }
-            "startagent" { Start-Agent -port $args[1] }
-            "forward" { Forward-Port -localPort $args[1] -remoteIP $args[2] -remotePort $args[3] }
-            "status" { Show-Status }
-            "stats" { Show-Stats }
-            "saveconfig" { Save-Config -name $args[1] -config $args[2] }
-            "loadconfig" { Load-Config -name $args[1] }
-            "dnslookup" { DnsLookup -domain $args[1] }
-            "nmap" { NmapScan -target $args[1] }
-            "firewall" { Manage-Firewall -action $args[1] -rule $args[2] }
-            "systeminfo" { Show-SystemInfo }
-            "user" { Manage-User -action $args[1] -username $args[2] }
-            "ping" { Ping-Host -host $args[1] }
-            "traceroute" { Trace-Route -host $args[1] }
-            "backup" { Backup -source $args[1] -destination $args[2] }
-            "restore" { Restore -source $args[1] -destination $args[2] }
-            "diskusage" { Disk-Usage }
-            "processlist" { Process-List }
-            "kill" { Kill-Process -pid $args[1] }
-            "service" { Manage-Service -serviceName $args[1] -action $args[2] }
-            "update" { Update-System }
-            "upgrade" { Upgrade-System }
-            "log" { View-Log -filename $args[1] }
-            "exit" { Write-Host "Exiting..." ; break }
-            default { Write-Host "Unknown command. Type 'help' for a list of commands." }
-        }
-    }
-}
+    # Display the prompt with the username
+    echo -n "$username/IPNMT 2 shell> "
+    read -r command
 
-# Start custom shell
-Custom-Shell
+    # Split command and arguments
+    command_args=($command)
+    cmd=${command_args[0]}
+    args=${command_args[@]:1}
+
+    # Handle custom commands
+    case $cmd in
+        "hello")
+            echo "Hello, user!"
+            ;;
+        "date")
+            echo "Current date and time: $(date)"
+            ;;
+        "ipnmt")
+            echo "IPNMT 2: IP Network Management Tool 2"
+            ;;
+        "scan")
+            scan_network
+            ;;
+        "list")
+            list_network_info
+            ;;
+        "connect")
+            connect_ssh "$args"
+            ;;
+        "kick")
+            kick_ip "$args"
+            ;;
+        "scanip")
+            scan_ip "$args"
+            ;;
+        "startagent")
+            start_agent "$args"
+            ;;
+        "forward")
+            forward_port ${command_args[1]} ${command_args[2]} ${command_args[3]}
+            ;;
+        "status")
+            status
+            ;;
+        "stats")
+            stats
+            ;;
+        "saveconfig")
+            save_config ${command_args[1]} "${command_args[@]:2}"
+            ;;
+        "loadconfig")
+            load_config "${command_args[1]}"
+            ;;
+        "dnslookup")
+            dns_lookup "$args"
+            ;;
+        "nmap")
+            nmap_scan "$args"
+            ;;
+        "firewall")
+            firewall ${command_args[1]} "${command_args[@]:2}"
+            ;;
+        "systeminfo")
+            system_info
+            ;;
+        "user")
+            manage_user ${command_args[1]} "${command_args[2]}"
+            ;;
+        "ping")
+            ping_host "$args"
+            ;;
+        "traceroute")
+            trace_route "$args"
+            ;;
+        "backup")
+            backup_files ${command_args[1]} ${command_args[2]}
+            ;;
+        "restore")
+            restore_files ${command_args[1]} ${command_args[2]}
+            ;;
+        "diskusage")
+            disk_usage
+            ;;
+        "processlist")
+            process_list
+            ;;
+        "kill")
+            kill_process "$args"
+            ;;
+        "service")
+            manage_service ${command_args[1]} "${command_args[2]}"
+            ;;
+        "update")
+            update_system
+            ;;
+        "upgrade")
+            upgrade_system
+            ;;
+        "log")
+            view_log "$args"
+            ;;
+        "help")
+            display_help
+            ;;
+        "exit")
+            echo "Goodbye!"
+            break
+            ;;
+        *)
+            echo "Unknown command: $cmd"
+            ;;
+    esac
+
+    # Wait for user input to continue
+    read -n 1 -s -r -p "Press any key to continue..."
+done
