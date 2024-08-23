@@ -72,3 +72,5 @@ License
 ## info
 
 how well and how this tool runs depents on your OS
+
+i got the idea from here: https://youtu.be/Xv6U2I7Fj_o?t=780
