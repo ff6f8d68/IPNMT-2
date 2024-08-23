@@ -1,7 +1,8 @@
 
 
 
-![Screenshot 2024-08-23 at 12 26 33 PM](https://github.com/user-attachments/assets/d98c3705-2c4f-40c1-9a98-daff08988511)
+![Screenshot 2024-08-23 at 12 40 16 PM](https://github.com/user-attachments/assets/c6191745-2d46-42a2-91a0-d55508fd5767)
+
 
 
 
