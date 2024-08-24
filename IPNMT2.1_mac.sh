@@ -507,7 +507,11 @@ start_listener() {
 
 # Main loop
 while true; do
-    echo "Enter command (type 'help' for a list of commands):"
+    # Get the username
+    username=$(whoami)
+
+    # Display the prompt with the username
+    echo -n "$username/IPNMT 2 shell> "
     read -r input
 
     case "$input" in
