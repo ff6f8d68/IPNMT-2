@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPNMT 2</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #0d1117;
+            color: #c9d1d9;
+        }
+        header {
+            background: #161b22;
+            color: #c9d1d9;
+            padding: 1rem;
+            text-align: center;
+        }
+        h1, h2 {
+            color: #e6edf3;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-top: 1rem;
+        }
+        h2 {
+            font-size: 1.5rem;
+            margin-top: 1rem;
+        }
+        p, ul {
+            margin: 1rem 0;
+        }
+        a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        ul {
+            list-style-type: disc;
+            margin-left: 2rem;
+        }
+        code {
+            background: #161b22;
+            color: #f0f6fc;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+        }
+        pre {
+            background: #161b22;
+            color: #f0f6fc;
+            padding: 1rem;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 1rem auto;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>IPNMT 2</h1>
+</header>
+
+<main>
+    <section>
+        <p><img src="https://github.com/user-attachments/assets/66fb0b53-4b22-433d-b618-db734aed75d3" alt="Screenshot_2024-08-23_at_12 40 16_PM-removebg-preview"></p>
+        <h2 id="info">Info</h2>
+        <p>How well and how this tool runs depends on your OS.</p>
+        <p>I got the idea from here: <a href="https://youtu.be/Xv6U2I7Fj_o?t=780">https://youtu.be/Xv6U2I7Fj_o?t=780</a></p>
+        <p>windows version currently doesn't work. To use this on Windows, download the linux version and run it with Git.</p>
+    </section>
+
+    <section>
+        <h2 id="overview">Overview</h2>
+        <p>IPNMT 2 is a custom shell script designed for IP Network Management. It provides various network and system management functionalities including network scanning, SSH connections, firewall management, and more.</p>
+    </section>
+
+    <section>
+        <h2 id="features">Features</h2>
+        <ul>
+            <li>Network management commands such as scanning, listing interfaces, and resolving domains</li>
+            <li>System management commands including user management, service control, and system updates</li>
+            <li>Backup and restore functionalities</li>
+            <li>Disk usage and process management</li>
+            <li>Log file viewing and tailing</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2 id="usage">Usage</h2>
+        <p>Here is a list of available commands you can use within the IPNMT 2 shell:</p>
+        <ul>
+            <li><code>hello</code> - Greet the user.</li>
+            <li><code>date</code> - Show the current date and time.</li>
+            <li><code>ipnmt</code> - Display information about IPNMT 2.</li>
+            <li><code>scan</code> - Scan for devices in the current network.</li>
+            <li><code>list</code> - List network interfaces with IP addresses and MAC addresses.</li>
+            <li><code>connect [ip]</code> - SSH connect to the specified IP address.</li>
+            <li><code>kick [ip]</code> - Kick the specified IP address out of the network.</li>
+            <li><code>scanip [domain]</code> - Resolve a domain to its IP addresses.</li>
+            <li><code>startagent [port]</code> - Start an SSH server on the specified port.</li>
+            <li><code>forward [local_port] [remote_ip] [remote_port]</code> - Forward a local port to a remote IP and port.</li>
+            <li><code>status</code> - Show the status of network interfaces and routing table.</li>
+            <li><code>stats</code> - Show network statistics and packet statistics.</li>
+            <li><code>saveconfig [name] [config]</code> - Save a configuration to a file.</li>
+            <li><code>loadconfig [name]</code> - Load a configuration from a file.</li>
+            <li><code>dnslookup [domain]</code> - Perform a DNS lookup for a domain.</li>
+            <li><code>nmap [target]</code> - Scan a target using nmap.</li>
+            <li><code>firewall [action] [rule]</code> - Manage firewall rules (add/remove/list).</li>
+            <li><code>systeminfo</code> - Show system information.</li>
+            <li><code>user [action] [username]</code> - Manage users (add/remove/check).</li>
+            <li><code>ping [host]</code> - Ping a host to check connectivity.</li>
+            <li><code>traceroute [host]</code> - Trace the route to a host.</li>
+            <li><code>backup [source] [destination]</code> - Backup files or directories.</li>
+            <li><code>restore [source] [destination]</code> - Restore files or directories from a backup.</li>
+            <li><code>diskusage</code> - Show disk usage statistics.</li>
+            <li><code>processlist</code> - List running processes.</li>
+            <li><code>kill [pid]</code> - Kill a process by its PID.</li>
+            <li><code>service [service_name] [start/stop/restart/status]</code> - Manage system services.</li>
+            <li><code>update</code> - Update system packages.</li>
+            <li><code>upgrade</code> - Upgrade system packages.</li>
+            <li><code>log [filename]</code> - View or tail a log file.</li>
+            <li><code>encrypt [filename]</code> - Encrypt a file.</li>
+            <li><code>listener start [port]</code> - Start a network listener on the specified port.</li>
+            <li><code>help</code> - Show this help message.</li>
+            <li><code>exit</code> - Exit the custom shell.</li>
+        </ul>
+        <p>Commands must be entered exactly as specified. Incorrect usage or missing arguments may result in errors or unintended behavior. Some commands require sudo privileges.</p>
+    </section>
+
+</main>
+
+</body>
+</html>
