@@ -80,3 +80,7 @@ Commands must be entered exactly as specified. Incorrect usage or missing argume
 Some commands require sudo privileges.
 License
 
+##download
+[linux](https://raw.githubusercontent.com/ff6f8d68/IPNMT-2/main/IPNMT2.1_linux.sh)
+[mac](https://raw.githubusercontent.com/ff6f8d68/IPNMT-2/main/IPNMT2.1_mac.sh)
+[windows (currently broken)](https://raw.githubusercontent.com/ff6f8d68/IPNMT-2/main/IPNMT2.1_windows.bat)
