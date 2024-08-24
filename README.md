@@ -82,5 +82,5 @@ License
 
 ## download
 - [linux](https://ipnmt.netlify.app/IPNMT2.1_linux.sh)
-- [mac](https://ipnmt.netlify.app/)IPNMT2.1_mac.sh)
+- [mac](https://ipnmt.netlify.app/IPNMT2.1_mac.sh)
 - [windows (currently broken)](https://ipnmt.netlify.app/IPNMT2.1_windows.bat)
