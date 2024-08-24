@@ -17,7 +17,7 @@ how well and how this tool runs depents on your OS
 
 i got the idea from here: https://youtu.be/Xv6U2I7Fj_o?t=780
 
-IPNMT2.1_windows.bat currently doesnt work to use this on windows download IPNMT2.1_linux.sh and run it with git
+the windows version currently doesnt work to use this on windows download the linux version and run it with git
 
 ## Overview
 
