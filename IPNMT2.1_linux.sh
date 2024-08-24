@@ -18,6 +18,44 @@ EOF
     echo -e "\033[34mIPNMT 2: IP Network Management Tool 2\033[0m"
 }
 
+# Encryption and Decryption Key (hardcoded for simplicity)
+ENCRYPTION_KEY="SuperSecretKey"
+
+# Function to encrypt a message
+encrypt_message() {
+    local message=$1
+    if [[ -z "$message" ]]; then
+        echo "Usage: encrypt [message]"
+        return
+    fi
+    echo "$message" | openssl enc -aes-256-cbc -a -salt -pass pass:"$ENCRYPTION_KEY"
+}
+
+# Function to start a listener
+start_listener() {
+    echo "Starting listener..."
+    while true; do
+        read -p "Enter an encrypted message: " encrypted_message
+        if [[ "$encrypted_message" == "exit" ]]; then
+            echo "Listener stopped."
+            break
+        fi
+        echo "$encrypted_message" | openssl enc -aes-256-cbc -d -a -pass pass:"$ENCRYPTION_KEY"
+    done
+}
+
+# Function to send an encrypted message to the network
+send_encrypted_message() {
+    local message=$1
+    if [[ -z "$message" ]]; then
+        echo "Usage: send [message]"
+        return
+    fi
+    encrypted_message=$(encrypt_message "$message")
+    echo "Encrypted message: $encrypted_message"
+    echo "$encrypted_message" | nc -w 1 -u 255.255.255.255 12345
+}
+
 # Function to display help information
 display_help() {
     echo -e "\033[34mAvailable Commands:\033[0m"
@@ -51,6 +89,9 @@ display_help() {
     echo -e "  \033[34mupdate\033[0m - Update system packages."
     echo -e "  \033[34mupgrade\033[0m - Upgrade system packages."
     echo -e "  \033[34mlog [filename]\033[0m - View or tail a log file."
+    echo -e "  \033[34mencrypt [message]\033[0m - Encrypt a message."
+    echo -e "  \033[34mlisten\033[0m - Start a listener to receive encrypted messages."
+    echo -e "  \033[34msend [message]\033[0m - Send an encrypted message."
     echo -e "  \033[34mhelp\033[0m - Show this help message."
     echo -e "  \033[34mexit\033[0m - Exit the custom shell."
 }
@@ -103,254 +144,286 @@ kick_ip() {
     
     # Check if IP is in the ARP table
     if ! arp -n | grep -q "$ip"; then
-        echo "IP $ip not found in ARP table."
+        echo "Error: IP $ip not found in the ARP table."
         return
     fi
     
-    # Flush ARP cache
-    sudo ip -s -s neigh flush all
+    # Retrieve the MAC address associated with the IP
+    local mac
+    mac=$(arp -n | grep "$ip" | awk '{print $3}')
     
-    # Disconnect the network interface to refresh connections
-    local iface=$(ip route show default | awk '/default/ {print $5}')
-    sudo ip link set dev "$iface" down
-    sleep 2
-    sudo ip link set dev "$iface" up
+    if [[ -z "$mac" ]]; then
+        echo "Error: Unable to retrieve MAC address for IP $ip."
+        return
+    fi
     
-    echo "IP $ip has been removed from ARP table and network interface has been reset."
+    echo "Found MAC address $mac for IP $ip. Blocking network access..."
+    
+    # Use iptables to block traffic from the MAC address
+    sudo iptables -A INPUT -m mac --mac-source "$mac" -j DROP
+    
+    if [[ $? -eq 0 ]]; then
+        echo "Successfully kicked IP $ip from the network."
+    else
+        echo "Error: Failed to kick IP $ip from the network."
+    fi
 }
 
-# Function to connect to an IP address using SSH
-connect_ssh() {
+# Function to connect to a remote server via SSH
+connect_to_ip() {
     local ip=$1
-
+    
     if [[ -z "$ip" ]]; then
         echo "Usage: connect [ip]"
         echo "Example: connect 192.168.1.100"
         return
     fi
-
+    
     echo "Connecting to $ip via SSH..."
     ssh "$ip"
 }
 
-# Function to start an SSH agent on a specified port
-start_agent() {
+# Function to perform a DNS lookup for a domain
+dns_lookup() {
+    local domain=$1
+    
+    if [[ -z "$domain" ]]; then
+        echo "Usage: dnslookup [domain]"
+        echo "Example: dnslookup www.example.com"
+        return
+    fi
+    
+    echo "Performing DNS lookup for domain $domain..."
+    
+    # Use dig to perform the DNS lookup
+    dig "$domain"
+}
+
+# Function to scan a target using nmap
+nmap_scan() {
+    local target=$1
+    
+    if [[ -z "$target" ]]; then
+        echo "Usage: nmap [target]"
+        echo "Example: nmap 192.168.1.0/24"
+        return
+    fi
+    
+    echo "Scanning target $target using nmap..."
+    nmap "$target"
+}
+
+# Function to add or remove firewall rules
+manage_firewall() {
+    local action=$1
+    local rule=$2
+    
+    if [[ -z "$action" || -z "$rule" ]]; then
+        echo "Usage: firewall [action] [rule]"
+        echo "Example: firewall add 192.168.1.100"
+        echo "Example: firewall remove 192.168.1.100"
+        echo "Example: firewall list"
+        return
+    fi
+    
+    case "$action" in
+        add)
+            echo "Adding firewall rule to allow $rule..."
+            sudo ufw allow from "$rule"
+            ;;
+        remove)
+            echo "Removing firewall rule for $rule..."
+            sudo ufw delete allow from "$rule"
+            ;;
+        list)
+            echo "Listing firewall rules..."
+            sudo ufw status numbered
+            ;;
+        *)
+            echo "Invalid action. Usage: firewall [add/remove/list] [rule]"
+            ;;
+    esac
+}
+
+# Function to start an SSH server on the specified port
+start_ssh_agent() {
     local port=$1
     
     if [[ -z "$port" ]]; then
         echo "Usage: startagent [port]"
-        echo "Example: startagent 22"
+        echo "Example: startagent 2222"
         return
     fi
-
-    sudo systemctl start sshd
-    sudo systemctl enable sshd
-    echo "Connect with the IP:"
-    curl ifconfig.me
-    echo ""
-    echo "And the username:"
-    whoami
-    echo ""
-    echo "The SSH server is running on port $port."
+    
+    echo "Starting SSH server on port $port..."
+    sudo /usr/sbin/sshd -p "$port"
 }
 
 # Function to forward a local port to a remote IP and port
-forward_port() {
+port_forwarding() {
     local local_port=$1
     local remote_ip=$2
     local remote_port=$3
-
+    
     if [[ -z "$local_port" || -z "$remote_ip" || -z "$remote_port" ]]; then
         echo "Usage: forward [local_port] [remote_ip] [remote_port]"
         echo "Example: forward 8080 192.168.1.100 80"
         return
     fi
-
+    
     echo "Forwarding local port $local_port to $remote_ip:$remote_port..."
-    
-    # Create SSH tunnel
-    ssh -L "$local_port:localhost:$remote_port" "$remote_ip" -N &
-    
-    # Capture the PID of the SSH tunnel
-    local pid=$!
-    
-    if [[ $? -ne 0 ]]; then
-        echo "Failed to establish port forwarding."
-        return
-    fi
-    
-    echo "Port $local_port is now being forwarded to $remote_ip:$remote_port (PID: $pid)"
+    ssh -L "$local_port":"$remote_ip":"$remote_port" "$remote_ip"
 }
 
-# Function to show network status
-status() {
-    echo "Network Interfaces Status:"
-    ip link show
+# Function to show the status of network interfaces and routing table
+show_status() {
+    echo "Network Interfaces:"
+    ip address
     echo "Routing Table:"
-    ip route show
+    ip route
 }
 
-# Function to show network and packet statistics
-stats() {
+# Function to show network statistics and packet statistics
+show_stats() {
     echo "Network Statistics:"
-    ifstat
+    netstat -s
     echo "Packet Statistics:"
-    netstat -i
+    ip -s link
 }
 
 # Function to save a configuration to a file
 save_config() {
     local name=$1
     local config=$2
+    
     if [[ -z "$name" || -z "$config" ]]; then
         echo "Usage: saveconfig [name] [config]"
+        echo "Example: saveconfig myconfig 'ip address show'"
         return
     fi
-    echo "$config" > "${name}.conf"
-    echo "Configuration saved as ${name}.conf"
+    
+    echo "Saving configuration to $name.conf..."
+    eval "$config" > "$name.conf"
 }
 
 # Function to load a configuration from a file
 load_config() {
     local name=$1
+    
     if [[ -z "$name" ]]; then
         echo "Usage: loadconfig [name]"
+        echo "Example: loadconfig myconfig"
         return
     fi
-    if [[ -f "${name}.conf" ]]; then
-        source "${name}.conf"
-        echo "Configuration loaded from ${name}.conf"
-    else
-        echo "Configuration file ${name}.conf not found."
-    fi
-}
-
-# Function to perform DNS lookup
-dns_lookup() {
-    local domain=$1
-    if [[ -z "$domain" ]]; then
-        echo "Usage: dnslookup [domain]"
-        return
-    fi
-    echo "Performing DNS lookup for domain $domain..."
-    dig +short "$domain"
-}
-
-# Function to scan a target using nmap
-nmap_scan() {
-    local target=$1
-    if [[ -z "$target" ]]; then
-        echo "Usage: nmap [target]"
-        return
-    fi
-    echo "Scanning target $target with nmap..."
-    nmap "$target"
-}
-
-# Function to manage firewall rules
-firewall() {
-    local action=$1
-    local rule=$2
-    if [[ -z "$action" || -z "$rule" ]]; then
-        echo "Usage: firewall [action] [rule] (action: add/remove/list)"
-        return
-    fi
-    case $action in
-        "add")
-            sudo iptables -A INPUT -p "$rule"
-            ;;
-        "remove")
-            sudo iptables -D INPUT -p "$rule"
-            ;;
-        "list")
-            sudo iptables -L
-            ;;
-        *)
-            echo "Unknown action: $action"
-            ;;
-    esac
+    
+    echo "Loading configuration from $name.conf..."
+    source "$name.conf"
 }
 
 # Function to show system information
 system_info() {
     echo "System Information:"
-    echo "Hostname: $(hostname)"
-    echo "Uptime: $(uptime -p)"
-    echo "CPU Info: $(lscpu | grep 'Model name')"
-    echo "Memory Info: $(free -h)"
-    echo "Disk Info: $(df -h)"
+    uname -a
+    echo "CPU Information:"
+    lscpu
+    echo "Memory Information:"
+    free -h
+    echo "Disk Information:"
+    df -h
 }
 
-# Function to manage users
-manage_user() {
+# Function to manage users (add/remove/check)
+manage_users() {
     local action=$1
     local username=$2
+    
     if [[ -z "$action" || -z "$username" ]]; then
-        echo "Usage: user [action] [username] (action: add/remove/check)"
+        echo "Usage: user [action] [username]"
+        echo "Example: user add myuser"
+        echo "Example: user remove myuser"
+        echo "Example: user check myuser"
         return
     fi
-    case $action in
-        "add")
-            sudo useradd "$username"
-            echo "User $username added."
+    
+    case "$action" in
+        add)
+            echo "Adding user $username..."
+            sudo adduser "$username"
             ;;
-        "remove")
-            sudo userdel "$username"
-            echo "User $username removed."
+        remove)
+            echo "Removing user $username..."
+            sudo deluser "$username"
             ;;
-        "check")
-            id "$username" &>/dev/null && echo "User $username exists." || echo "User $username does not exist."
+        check)
+            echo "Checking if user $username exists..."
+            if id "$username" &>/dev/null; then
+                echo "User $username exists."
+            else
+                echo "User $username does not exist."
+            fi
             ;;
         *)
-            echo "Unknown action: $action"
+            echo "Invalid action. Usage: user [add/remove/check] [username]"
             ;;
     esac
 }
 
-# Function to ping a host
+# Function to ping a host to check connectivity
 ping_host() {
     local host=$1
+    
     if [[ -z "$host" ]]; then
         echo "Usage: ping [host]"
+        echo "Example: ping www.example.com"
         return
     fi
-    echo "Pinging $host..."
+    
+    echo "Pinging host $host..."
     ping -c 4 "$host"
 }
 
 # Function to trace the route to a host
 trace_route() {
     local host=$1
+    
     if [[ -z "$host" ]]; then
         echo "Usage: traceroute [host]"
+        echo "Example: traceroute www.example.com"
         return
     fi
-    echo "Tracing route to $host..."
+    
+    echo "Tracing route to host $host..."
     traceroute "$host"
 }
 
 # Function to backup files or directories
-backup_files() {
+backup_data() {
     local source=$1
     local destination=$2
+    
     if [[ -z "$source" || -z "$destination" ]]; then
         echo "Usage: backup [source] [destination]"
+        echo "Example: backup /path/to/source /path/to/backup"
         return
     fi
+    
     echo "Backing up $source to $destination..."
-    cp -r "$source" "$destination"
+    rsync -avh "$source" "$destination"
 }
 
 # Function to restore files or directories from a backup
-restore_files() {
+restore_data() {
     local source=$1
     local destination=$2
+    
     if [[ -z "$source" || -z "$destination" ]]; then
         echo "Usage: restore [source] [destination]"
+        echo "Example: restore /path/to/backup /path/to/restore"
         return
     fi
+    
     echo "Restoring $source to $destination..."
-    cp -r "$source" "$destination"
+    rsync -avh "$source" "$destination"
 }
 
 # Function to show disk usage statistics
@@ -368,186 +441,162 @@ process_list() {
 # Function to kill a process by its PID
 kill_process() {
     local pid=$1
+    
     if [[ -z "$pid" ]]; then
         echo "Usage: kill [pid]"
+        echo "Example: kill 12345"
         return
     fi
-    echo "Killing process $pid..."
-    kill "$pid"
+    
+    echo "Killing process with PID $pid..."
+    sudo kill "$pid"
 }
 
 # Function to manage system services
 manage_service() {
     local service_name=$1
     local action=$2
+    
     if [[ -z "$service_name" || -z "$action" ]]; then
         echo "Usage: service [service_name] [start/stop/restart/status]"
+        echo "Example: service apache2 start"
         return
     fi
-    case $action in
-        "start")
-            sudo systemctl start "$service_name"
-            ;;
-        "stop")
-            sudo systemctl stop "$service_name"
-            ;;
-        "restart")
-            sudo systemctl restart "$service_name"
-            ;;
-        "status")
-            sudo systemctl status "$service_name"
-            ;;
-        *)
-            echo "Unknown action: $action"
-            ;;
-    esac
+    
+    echo "$action service $service_name..."
+    sudo systemctl "$action" "$service_name"
 }
 
 # Function to update system packages
 update_system() {
     echo "Updating system packages..."
-    sudo apt update
+    sudo apt-get update
 }
 
 # Function to upgrade system packages
 upgrade_system() {
     echo "Upgrading system packages..."
-    sudo apt upgrade -y
+    sudo apt-get upgrade -y
 }
 
 # Function to view or tail a log file
 view_log() {
     local filename=$1
+    
     if [[ -z "$filename" ]]; then
         echo "Usage: log [filename]"
+        echo "Example: log /var/log/syslog"
         return
     fi
-    echo "Viewing log file $filename..."
-    tail -f "$filename"
+    
+    echo "Displaying last 10 lines of log file $filename..."
+    tail -n 10 "$filename"
 }
 
-# Start custom shell loop
-while true; do
-    # Clear the screen and display the logo
-    clear
-    display_logo
+# Function to clear a log file
+clear_log() {
+    local filename=$1
+    
+    if [[ -z "$filename" ]]; then
+        echo "Usage: clearlog [filename]"
+        echo "Example: clearlog /var/log/syslog"
+        return
+    fi
+    
+    echo "Clearing log file $filename..."
+    sudo truncate -s 0 "$filename"
+}
 
-    # Get the username
-    username=$(whoami)
-
-    # Display the prompt with the username
-    echo -n "$username/IPNMT 2 shell> "
-    read -r command
-
-    # Split command and arguments
-    command_args=($command)
-    cmd=${command_args[0]}
-    args=${command_args[@]:1}
-
-    # Handle custom commands
-    case $cmd in
-        "hello")
-            echo "Hello, user!"
+# Main function to handle the commands
+main() {
+    local command=$1
+    shift
+    
+    case "$command" in
+        check)
+            check_ip "$@"
             ;;
-        "date")
-            echo "Current date and time: $(date)"
+        kick)
+            kick_ip "$@"
             ;;
-        "ipnmt")
-            echo "IPNMT 2: IP Network Management Tool 2"
+        connect)
+            connect_to_ip "$@"
             ;;
-        "scan")
-            scan_network
+        dnslookup)
+            dns_lookup "$@"
             ;;
-        "list")
-            list_network_info
+        nmap)
+            nmap_scan "$@"
             ;;
-        "connect")
-            connect_ssh "$args"
+        firewall)
+            manage_firewall "$@"
             ;;
-        "kick")
-            kick_ip "$args"
+        startagent)
+            start_ssh_agent "$@"
             ;;
-        "scanip")
-            scan_ip "$args"
+        forward)
+            port_forwarding "$@"
             ;;
-        "startagent")
-            start_agent "$args"
+        status)
+            show_status "$@"
             ;;
-        "forward")
-            forward_port ${command_args[1]} ${command_args[2]} ${command_args[3]}
+        stats)
+            show_stats "$@"
             ;;
-        "status")
-            status
+        saveconfig)
+            save_config "$@"
             ;;
-        "stats")
-            stats
+        loadconfig)
+            load_config "$@"
             ;;
-        "saveconfig")
-            save_config ${command_args[1]} "${command_args[@]:2}"
+        sysinfo)
+            system_info "$@"
             ;;
-        "loadconfig")
-            load_config "${command_args[1]}"
+        user)
+            manage_users "$@"
             ;;
-        "dnslookup")
-            dns_lookup "$args"
+        ping)
+            ping_host "$@"
             ;;
-        "nmap")
-            nmap_scan "$args"
+        traceroute)
+            trace_route "$@"
             ;;
-        "firewall")
-            firewall ${command_args[1]} "${command_args[@]:2}"
+        backup)
+            backup_data "$@"
             ;;
-        "systeminfo")
-            system_info
+        restore)
+            restore_data "$@"
             ;;
-        "user")
-            manage_user ${command_args[1]} "${command_args[2]}"
+        disk)
+            disk_usage "$@"
             ;;
-        "ping")
-            ping_host "$args"
+        process)
+            process_list "$@"
             ;;
-        "traceroute")
-            trace_route "$args"
+        kill)
+            kill_process "$@"
             ;;
-        "backup")
-            backup_files ${command_args[1]} ${command_args[2]}
+        service)
+            manage_service "$@"
             ;;
-        "restore")
-            restore_files ${command_args[1]} ${command_args[2]}
+        update)
+            update_system "$@"
             ;;
-        "diskusage")
-            disk_usage
+        upgrade)
+            upgrade_system "$@"
             ;;
-        "processlist")
-            process_list
+        log)
+            view_log "$@"
             ;;
-        "kill")
-            kill_process "$args"
-            ;;
-        "service")
-            manage_service ${command_args[1]} "${command_args[2]}"
-            ;;
-        "update")
-            update_system
-            ;;
-        "upgrade")
-            upgrade_system
-            ;;
-        "log")
-            view_log "$args"
-            ;;
-        "help")
-            display_help
-            ;;
-        "exit")
-            echo "Goodbye!"
-            break
+        clearlog)
+            clear_log "$@"
             ;;
         *)
-            echo "Unknown command: $cmd"
+            echo "Invalid command: $command"
+            echo "Available commands: check, kick, connect, dnslookup, nmap, firewall, startagent, forward, status, stats, saveconfig, loadconfig, sysinfo, user, ping, traceroute, backup, restore, disk, process, kill, service, update, upgrade, log, clearlog"
             ;;
     esac
+}
 
-    # Wait for user input to continue
-    read -n 1 -s -r -p "Press any key to continue..."
-done
+# Entry point of the script
+main "$@"
