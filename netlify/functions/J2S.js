@@ -1,5 +1,3 @@
-const fetch = require('node-fetch');
-
 exports.handler = async function(event, context) {
     const url = event.queryStringParameters.url;
 
@@ -11,6 +9,9 @@ exports.handler = async function(event, context) {
     }
 
     try {
+        // Dynamically import node-fetch
+        const { default: fetch } = await import('node-fetch');
+
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -22,7 +23,6 @@ exports.handler = async function(event, context) {
                                     .map(([key, value]) => `${key} = ${value}`)
                                     .join('\n');
 
-        // Return the formatted data as plain text
         return {
             statusCode: 200,
             headers: { 'Content-Type': 'text/plain' },
