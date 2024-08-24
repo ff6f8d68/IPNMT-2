@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch JSON and Display List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #f0f0f0;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>JSON Values List</h1>
+    <ul id="json-list"></ul>
+
+    <script>
+        // Function to get URL parameter
+        function getUrlParameter(name) {
+            name = name.replace(/[\[\]]/g, '\\$&');
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // Fetch JSON from the provided URL and populate the list
+        async function fetchAndDisplayJson() {
+            const url = getUrlParameter('url');
+            if (url) {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    const listElement = document.getElementById('json-list');
+                    
+                    // Clear any existing content in the list
+                    listElement.innerHTML = '';
+                    
+                    // Iterate over the values and add them to the list
+                    Object.values(data).forEach(value => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = value;
+                        listElement.appendChild(listItem);
+                    });
+                } catch (error) {
+                    console.error('Error fetching JSON:', error);
+                    alert('Error fetching JSON data. Please check the URL.');
+                }
+            } else {
+                alert('Please provide a URL parameter with the key "url".');
+            }
+        }
+
+        // Call the function on page load
+        fetchAndDisplayJson();
+    </script>
+</body>
+</html>
