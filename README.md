@@ -81,6 +81,6 @@ Some commands require sudo privileges.
 License
 
 ## download
-- [linux](https://raw.githubusercontent.com/ff6f8d68/IPNMT-2/main/IPNMT2.1_linux.sh)
-- [mac](https://raw.githubusercontent.com/ff6f8d68/IPNMT-2/main/IPNMT2.1_mac.sh)
-- [windows (currently broken)](https://raw.githubusercontent.com/ff6f8d68/IPNMT-2/main/IPNMT2.1_windows.bat)
+- [linux](https://ipnmt.netlify.app/IPNMT2.1_linux.sh)
+- [mac](https://ipnmt.netlify.app/)IPNMT2.1_mac.sh)
+- [windows (currently broken)](https://ipnmt.netlify.app/IPNMT2.1_windows.bat)
