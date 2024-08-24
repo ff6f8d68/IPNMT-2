@@ -70,6 +70,8 @@ Here is a list of available commands you can use within the IPNMT 2 shell:
 - update - Update system packages.
 - upgrade - Upgrade system packages.
 - log [filename] - View or tail a log file.
+- encrypt [filename] - Encrypt a file.
+- listener start [port] - Start a network listener on the specified port.
 - help - Show this help message.
 - exit - Exit the custom shell.
 
