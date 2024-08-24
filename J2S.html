@@ -3,25 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fetch JSON and Display as Key=Value</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        pre {
-            background-color: #f0f0f0;
-            padding: 10px;
-            border-radius: 4px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-    </style>
+    <title>Fetch JSON and Return Key=Value</title>
 </head>
 <body>
-    <h1>JSON Key=Value Pairs</h1>
-    <pre id="json-string"></pre>
-
     <script>
         // Function to get URL parameter
         function getUrlParameter(name) {
@@ -30,8 +14,8 @@
             return urlParams.get(name);
         }
 
-        // Fetch JSON from the provided URL and display as key=value string
-        async function fetchAndDisplayJson() {
+        // Function to fetch JSON and return it as plain text in key=value format
+        async function fetchAndReturnJson() {
             const url = getUrlParameter('url');
             if (url) {
                 try {
@@ -40,23 +24,22 @@
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
                     const data = await response.json();
-                    const stringOutput = Object.entries(data)
-                                              .map(([key, value]) => `${key} = ${value}`)
-                                              .join('\n');
-                    
-                    // Display the key=value pairs as a string in the pre element
-                    document.getElementById('json-string').textContent = stringOutput;
+                    const formattedData = Object.entries(data)
+                                                .map(([key, value]) => `${key} = ${value}`)
+                                                .join('\n');
+
+                    // Output the formatted data
+                    document.body.textContent = formattedData;
                 } catch (error) {
-                    console.error('Error fetching JSON:', error);
-                    alert('Error fetching JSON data. Please check the URL.');
+                    document.body.textContent = `Error fetching JSON data: ${error.message}`;
                 }
             } else {
-                alert('Please provide a URL parameter with the key "url".');
+                document.body.textContent = 'Please provide a URL parameter with the key "url".';
             }
         }
 
-        // Call the function on page load
-        fetchAndDisplayJson();
+        // Run the function on page load
+        fetchAndReturnJson();
     </script>
 </body>
 </html>
