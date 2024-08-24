@@ -621,6 +621,9 @@ while true; do
         listener)
             start_listener "$2"
             ;;
+        ddos)
+            ddos "$args"
+            ;;
         exit)
             break
             ;;
