@@ -331,7 +331,17 @@ manage_users() {
             ;;
     esac
 }
-
+ddos() {
+    local target_ip=$1
+    if [[ -z "$target_ip" ]]; then
+        echo "Usage: ddos [target_ip]"
+        echo "Example: ddos 192.168.1.100"
+        return
+    fi
+    echo "Launching DDoS attack on $target_ip..."
+    # Use a tool like lofty to perform the DDoS attack
+    lofty $target_ip
+}
 # Function to ping a host
 ping_host() {
     local host=$1
