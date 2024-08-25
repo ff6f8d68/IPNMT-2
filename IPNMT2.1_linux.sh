@@ -120,6 +120,14 @@ logfile="network_activity.log"
 touch "$logfile" || { echo "Error: Cannot create log file at $logfile"; exit 1; }
 
 # Function to log network activity
+monitor_network() {
+# Define log file location
+logfile="network_activity.log"
+
+# Ensure log file is created and writable
+touch "$logfile" || { echo "Error: Cannot create log file at $logfile"; exit 1; }
+
+# Function to log network activity
 log_network_activity() {
     local message=$1
     echo "$(date): $message" >> "$logfile"
