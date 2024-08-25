@@ -55,6 +55,7 @@ display_help() {
     echo -e "  \033[34mlistener start [port]\033[0m - Start a network listener on the specified port."
     echo -e "  \033[34mhelp\033[0m - Show this help message."
     echo -e "  \033[34mexit\033[0m - Exit the custom shell."
+    echo -e "  \033[34mnetlog\033[0m - log all activity in the network"
 }
 
 # Function to list network interfaces with IP addresses and MAC addresses
@@ -110,7 +111,40 @@ scan_network() {
     echo "Scanning network for devices..."
     sudo arp -a
 }
+# Function to monitor network traffic
+monitor_network() {
+# Define log file location
+logfile="network_activity.log"
 
+# Ensure log file is created and writable
+touch "$logfile" || { echo "Error: Cannot create log file at $logfile"; exit 1; }
+
+# Function to log network activity
+log_network_activity() {
+    local message=$1
+    echo "$(date): $message" >> "$logfile"
+    echo "$message"  # Print to console
+}
+    echo "Monitoring network traffic. Logging to $logfile..."
+
+    # Start capturing network traffic with tcpdump
+    sudo tcpdump |
+    while IFS= read -r line; do
+        # Filter out non-essential traffic
+        if [[ "$line" == *"Flags [S]"* || "$line" == *"Flags [P.]"* ]]; then
+            # Look for HTTP requests (GET/POST), DNS queries, and suspicious domains
+            if [[ "$line" == *"HTTP"* || "$line" == *"GET"* || "$line" == *"POST"* ]]; then
+                log_network_activity "HTTP request: $line"
+            elif [[ "$line" == *"DNS"* ]]; then
+                log_network_activity "DNS query: $line"
+            elif [[ "$line" == *"Telegram"* || "$line" == *"Discord"* || "$line" == *"Pastebin"* ]]; then
+                log_network_activity "Suspicious traffic: $line"
+            else
+                log_network_activity "User traffic: $line"
+            fi
+        fi
+    done
+}
 # Function to resolve a domain to its IP addresses
 scan_ip() {
     local domain=$1
@@ -615,8 +649,7 @@ while true; do
             ;;
             "encrypt") encrypt_file $args
             ;;
-            encrypt) encrypt_file $args
-            ;;
+            "netlog") monitor_network
         *)
             echo "Unknown command: $cmd"
             ;;
