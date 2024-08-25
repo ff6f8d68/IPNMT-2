@@ -671,8 +671,8 @@ while true; do
             "encrypt") encrypt_file $args
             ;;
             "netlog") monitor_network
-        *)
-            echo "Unknown command: $cmd"
+     "*")
+            echo "Invalid command. Type 'help' for a list of commands."
             ;;
             
     esac
