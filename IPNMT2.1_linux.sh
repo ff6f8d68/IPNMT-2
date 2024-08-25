@@ -671,7 +671,8 @@ while true; do
             "encrypt") encrypt_file $args
             ;;
             "netlog") monitor_network
-            *
+            ;;
+            *)
             echo "Invalid command. Type 'help' for a list of commands."
             ;;
             
