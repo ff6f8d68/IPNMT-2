@@ -71,10 +71,19 @@ display_help() {
     echo -e "  \033[34mexit\033[0m - Exit the custom shell."
     echo -e "  \033[34mnetlog\033[0m - log all activity in the network"
 }
+monitor_network() {
+# Define log file location
+logfile="network_activity.log"
+
+# Ensure log file is created and writable
+touch "$logfile" || { echo "Error: Cannot create log file at $logfile"; exit 1; }
+
+# Function to log network activity
 log_network_activity() {
     local message=$1
     echo "$(date): $message" >> "$logfile"
     echo "$message"  # Print to console
+}
     echo "Monitoring network traffic. Logging to $logfile..."
 
     # Start capturing network traffic with tcpdump
