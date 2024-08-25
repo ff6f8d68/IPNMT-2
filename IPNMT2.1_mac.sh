@@ -75,7 +75,6 @@ log_network_activity() {
     local message=$1
     echo "$(date): $message" >> "$logfile"
     echo "$message"  # Print to console
-}
     echo "Monitoring network traffic. Logging to $logfile..."
 
     # Start capturing network traffic with tcpdump
