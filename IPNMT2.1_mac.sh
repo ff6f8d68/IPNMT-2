@@ -584,31 +584,7 @@ while true; do
 
     case "$input" in
         help)
-            echo "Available commands:"
-            echo "portforward - Forward local port to a remote IP and port"
-            echo "network_status - Display network status"
-            echo "network_stats - Display network statistics"
-            echo "saveconfig - Save a configuration to a file"
-            echo "loadconfig - Load a configuration from a file"
-            echo "dnslookup - Perform a DNS lookup"
-            echo "nmap - Scan a target using nmap"
-            echo "firewall - Manage firewall rules"
-            echo "system_info - Show system information"
-            echo "user - Manage users"
-            echo "ping - Ping a host"
-            echo "traceroute - Trace the route to a host"
-            echo "backup - Backup files or directories"
-            echo "restore - Restore files or directories from a backup"
-            echo "disk_usage - Show disk usage statistics"
-            echo "process_list - List running processes"
-            echo "kill - Kill a process by its PID"
-            echo "service - Manage system services"
-            echo "update_system - Update system packages"
-            echo "upgrade_system - Upgrade system packages"
-            echo "log - View or tail a log file"
-            echo "encrypt - Encrypt a file"
-            echo "listener - Start a network listener"
-            echo "exit - Exit the program"
+            display_help
             ;;
         portforward)
             port_forward "$2" "$3" "$4" "$5"
