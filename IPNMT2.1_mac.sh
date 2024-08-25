@@ -674,7 +674,7 @@ while true; do
         ddos)
             ddos "$args" -n 50 -t 5
             ;;
-            netlog) monitor_network
+            netlog) monitor_network;;
         exit)
             break
             ;;
