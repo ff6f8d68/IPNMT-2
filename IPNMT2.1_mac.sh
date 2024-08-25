@@ -69,6 +69,7 @@ display_help() {
     echo -e "  \033[34mlistener start [port]\033[0m - Start a network listener on the specified port."
     echo -e "  \033[34mhelp\033[0m - Show this help message."
     echo -e "  \033[34mexit\033[0m - Exit the custom shell."
+    echo -e "  \033[34mnetlog\033[0m - log all activity in the network"
 }
 
 # Function to list network interfaces with IP addresses and MAC addresses
