@@ -71,7 +71,31 @@ display_help() {
     echo -e "  \033[34mexit\033[0m - Exit the custom shell."
     echo -e "  \033[34mnetlog\033[0m - log all activity in the network"
 }
+log_network_activity() {
+    local message=$1
+    echo "$(date): $message" >> "$logfile"
+    echo "$message"  # Print to console
+}
+    echo "Monitoring network traffic. Logging to $logfile..."
 
+    # Start capturing network traffic with tcpdump
+    sudo tcpdump |
+    while IFS= read -r line; do
+        # Filter out non-essential traffic
+        if [[ "$line" == *"Flags [S]"* || "$line" == *"Flags [P.]"* ]]; then
+            # Look for HTTP requests (GET/POST), DNS queries, and suspicious domains
+            if [[ "$line" == *"HTTP"* || "$line" == *"GET"* || "$line" == *"POST"* ]]; then
+                log_network_activity "HTTP request: $line"
+            elif [[ "$line" == *"DNS"* ]]; then
+                log_network_activity "DNS query: $line"
+            elif [[ "$line" == *"Telegram"* || "$line" == *"Discord"* || "$line" == *"Pastebin"* ]]; then
+                log_network_activity "Suspicious traffic: $line"
+            else
+                log_network_activity "User traffic: $line"
+            fi
+        fi
+    done
+}
 # Function to list network interfaces with IP addresses and MAC addresses
 list_network_info() {
     printf '%10s %32s %32s\n' interface ipaddress macaddress
