@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personality Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .message {
+            margin-bottom: 20px;
+        }
+        .message p {
+            margin: 5px 0;
+        }
+        .message input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .submit {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .result {
+            font-size: 1.2em;
+            margin-top: 20px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Personality Test</h1>
+        <div id="chat"></div>
+        <button class="submit" onclick="calculatePersonality()">Submit</button>
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        const usernames = ['Mom', 'Dad', 'BestFriend', 'Boss', 'Sister', 'Brother', 'Teacher', 'Roommate', 'Neighbor', 'Coach'];
+        const messages = [
+            "Can you help me with this task?",
+            "What do you want for dinner tonight?",
+            "Are you coming to the party?",
+            "Don't forget to complete your assignment!",
+            "How do you feel about this project?",
+            "Can we talk later?",
+            "Would you like to go for a walk?",
+            "Have you finished your chores?",
+            "Let's hang out this weekend.",
+            "Can you give me some advice?"
+        ];
+
+        const selectedMessages = [];
+        const selectedUsernames = [];
+        const responses = [];
+
+        function getRandomInt(max) {
+            return Math.floor(Math.random() * max);
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function generateChat() {
+            shuffleArray(messages);
+            shuffleArray(usernames);
+
+            for (let i = 0; i < 10; i++) {
+                selectedMessages.push(messages[i]);
+                selectedUsernames.push(usernames[i]);
+
+                const chatDiv = document.createElement('div');
+                chatDiv.className = 'message';
+                chatDiv.innerHTML = `<p><strong>${usernames[i]}:</strong> ${messages[i]}</p>
+                                     <input type="text" id="response${i}" placeholder="Your response...">`;
+                document.getElementById('chat').appendChild(chatDiv);
+            }
+        }
+
+        function calculatePersonality() {
+            let positivity = 0;
+            let length = 0;
+            let politeness = 0;
+
+            const positiveWords = ['yes', 'sure', 'absolutely', 'okay', 'great', 'of course', 'happy', 'glad'];
+            const politeWords = ['please', 'thank you', 'thanks', 'sorry', 'excuse me'];
+
+            for (let i = 0; i < 10; i++) {
+                const response = document.getElementById(`response${i}`).value;
+                responses.push(response);
+
+                if (positiveWords.some(word => response.toLowerCase().includes(word))) {
+                    positivity += 1;
+                }
+
+                if (politeWords.some(word => response.toLowerCase().includes(word))) {
+                    politeness += 1;
+                }
+
+                length += response.split(' ').length;
+            }
+
+            let result;
+            if (positivity > 7 && politeness > 5 && length > 50) {
+                result = "You're a Friendly and Polite Optimist!";
+            } else if (positivity > 5 && politeness > 3) {
+                result = "You're a Positive and Considerate Person.";
+            } else if (length > 70) {
+                result = "You're a Thoughtful and Detailed Communicator.";
+            } else {
+                result = "You're a Pragmatic and Direct Communicator.";
+            }
+
+            document.getElementById('result').textContent = `Your personality type: ${result}`;
+        }
+
+        window.onload = generateChat;
+    </script>
+</body>
+</html>
