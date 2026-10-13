@@ -210,8 +210,10 @@ IPNMT Team
 
 install_dependencies() {
     echo_info "Checking dependencies..."
-    local required=("ip" "ping" "traceroute" "arp" "ss" "ethtool" "iw")
-    local optional=("tcpdump" "iperf3" "nft" "speedtest-cli" "dig" "whois" "nmcli" "wpa_supplicant" "bpftool")
+    
+    # Only check for truly essential commands
+    local required=("ip" "ping")
+    local optional=("traceroute" "ss" "netstat" "ethtool" "iw" "tcpdump" "iperf3" "nft" "speedtest-cli" "dig" "whois" "nmcli" "wpa_supplicant" "bpftool" "net-tools" "dnsutils")
     
     local missing_req=()
     for cmd in "${required[@]}"; do
@@ -232,6 +234,52 @@ install_dependencies() {
             pacman -Sy --noconfirm "${missing_req[@]}"
         else
             echo_warning "Please install manually: ${missing_req[*]}"
+        fi
+    fi
+    
+    # Try to install optional packages that are missing
+    local missing_opt=()
+    for cmd in "${optional[@]}"; do
+        if ! command -v "$cmd" &>/dev/null; then
+            missing_opt+=("$cmd")
+        fi
+    done
+    
+    if [ ${#missing_opt[@]} -gt 0 ]; then
+        echo_info "Attempting to install optional packages..."
+        if command -v apt-get &>/dev/null; then
+            # Map to Debian package names
+            local deb_packages=()
+            for pkg in "${missing_opt[@]}"; do
+                case $pkg in
+                    traceroute) deb_packages+=("traceroute") ;;
+                    ss|arp|netstat) deb_packages+=("iproute2" "net-tools") ;;
+                    ethtool) deb_packages+=("ethtool") ;;
+                    iw) deb_packages+=("iw") ;;
+                    tcpdump) deb_packages+=("tcpdump") ;;
+                    iperf3) deb_packages+=("iperf3") ;;
+                    nft) deb_packages+=("nftables") ;;
+                    speedtest-cli) deb_packages+=("speedtest-cli") ;;
+                    dig) deb_packages+=("dnsutils") ;;
+                    whois) deb_packages+=("whois") ;;
+                    nmcli) deb_packages+=("network-manager") ;;
+                    wpa_supplicant) deb_packages+=("wpasupplicant") ;;
+                    bpftool) deb_packages+=("bpftool") ;;
+                    net-tools) deb_packages+=("net-tools") ;;
+                    dnsutils) deb_packages+=("dnsutils") ;;
+                    *) deb_packages+=("$pkg") ;;
+                esac
+            done
+            if [ ${#deb_packages[@]} -gt 0 ]; then
+                echo_info "Installing packages: ${deb_packages[*]}"
+                apt-get install -y -qq "${deb_packages[@]}" 2>&1 | grep -v "^Selecting\|^Preparing\|^Unpacking\|^Setting"
+            fi
+        elif command -v yum &>/dev/null; then
+            yum install -y "${missing_opt[@]}" 2>&1 | grep -v "^Loaded\|^Resolving\|^Running"
+        elif command -v dnf &>/dev/null; then
+            dnf install -y "${missing_opt[@]}"
+        elif command -v pacman &>/dev/null; then
+            pacman -Sy --noconfirm "${missing_opt[@]}"
         fi
     fi
     
@@ -276,9 +324,9 @@ _ipnmt_completion() {
     elif [[ " $commands " == *" $prev "* ]]; then
         case $prev in
             iface|ethtool|ping|traceroute|iperf|dns|whois)
-                COMPREPLY=( $(compgen -W "$(ip -o link show 2>/dev/null | awk -F': ' '{print $2}')" -- "${cur}") );;
-            wifi-connect) COMPREPLY=( $(compgen -W "$(iw dev 2>/dev/null | grep Interface | awk '{print $2}')" -- "${cur}") );;
-            sysctl) COMPREPLY=( $(compgen -W "$(sysctl -a 2>/dev/null | grep '^net\.' | cut -d'=' -f1 | tr '.' ' ')" -- "${cur}") );;
+                COMPREPLY=( $(compgen -W "$(ip -o link show 2>/dev/null | awk -F': ' '{print $2}')" -- "${cur}") ;;
+            wifi-connect) COMPREPLY=( $(compgen -W "$(iw dev 2>/dev/null | grep Interface | awk '{print $2}')" -- "${cur}") ;;
+            sysctl) COMPREPLY=( $(compgen -W "$(sysctl -a 2>/dev/null | grep '^net\.' | cut -d'=' -f1 | tr '.' ' ')" -- "${cur}") ;;
             *) COMPREPLY=();;
         esac
     else
