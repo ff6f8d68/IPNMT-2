@@ -1,0 +1,917 @@
+#!/bin/bash
+# IPNMT 3 - IP Network Management Tool
+# A comprehensive tool for kernel-level network debugging and direct WiFi controller access
+# Version: 3.0.0
+
+set -euo pipefail
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Configuration
+CONFIG_DIR="$HOME/.ipnmt"
+LOG_DIR="$HOME/.ipnmt/logs"
+CACHE_DIR="$HOME/.ipnmt/cache"
+
+# Ensure directories exist
+mkdir -p "$CONFIG_DIR" "$LOG_DIR" "$CACHE_DIR"
+
+# Logging function
+log_file="$LOG_DIR/ipnmt_$(date +%Y%m%d_%H%M%S).log"
+log() {
+    local level=$1
+    local message=$2
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "[$timestamp] [$level] $message" | tee -a "$log_file"
+}
+
+# Error handling
+error_exit() {
+    log "ERROR" "$1"
+    echo -e "${RED}[ERROR] $1${NC}" >&2
+    exit 1
+}
+
+# Check if running as root for certain operations
+check_root() {
+    if [ "$EUID" -ne 0 ]; then
+        error_exit "This operation requires root privileges. Please run with sudo."
+    fi
+}
+
+# Banner
+show_banner() {
+    cat << "EOF"
+${CYAN}
+  _____ _____ _   _ _____ _____ _   _ _____ 
+ |_   _|_   _| | | |_   _|_   _| | | |_   _|
+   | |   | | | | | | | |   | | | |_| | | | 
+   | |   | | | |_| | | |   | | |  _  | | | 
+  _| |_ _| |_ \___/  | |  _| |_| | | |_| |_ 
+ |_____|_____|     |___| |_____|_| |_|_____|
+${NC}
+${PURPLE}IP Network Management Tool v3.0.0${NC}
+${YELLOW}Kernel-level network debugging and WiFi controller access${NC}
+EOF
+}
+
+# Help text
+show_help() {
+    cat << "EOF"
+${GREEN}IPNMT 3 - IP Network Management Tool${NC}
+
+${BLUE}USAGE:${NC}
+    ipnmt [OPTIONS] COMMAND [ARGS...]
+
+${BLUE}OPTIONS:${NC}
+    -h, --help      Show this help message
+    -v, --version   Show version information
+    -d, --debug     Enable debug mode
+
+${BLUE}COMMANDS:${NC}
+
+${YELLOW}Network Information:${NC}
+    ifaces           List all network interfaces
+    iface <name>     Show details for a specific interface
+    ip               Show IP addresses for all interfaces
+    routes           Show routing table
+    arp              Show ARP cache
+    netstat          Show network connections
+
+${YELLOW}Network Debugging:${NC}
+    ping <host>      Ping a host with detailed output
+    traceroute <host> Trace route to a host
+    iperf <host>     Run iperf test to a host
+    tcpdump          Start tcpdump capture (requires root)
+    sniff            Start packet sniffing (requires root)
+    
+${YELLOW}Kernel-Level Tools:${NC}
+    kernel-info      Show kernel network configuration
+    sysctl [key]     Show or set sysctl network parameters
+    iptables         Show iptables rules (requires root)
+    nftables         Show nftables rules (requires root)
+    ethtool <iface>  Show ethtool information for interface
+
+${YELLOW}WiFi Controller:${NC}
+    wifi-scan        Scan for available WiFi networks
+    wifi-connect <ssid> [password] Connect to WiFi network
+    wifi-disconnect  Disconnect from current WiFi
+    wifi-info        Show current WiFi connection info
+    wifi-list        List available WiFi interfaces
+    
+${YELLOW}Advanced:${NC}
+    socket           Open raw socket for network operations
+    bpfilter         Manage BPF filters
+    netns            Manage network namespaces (requires root)
+    
+${YELLOW}Utilities:${NC}
+    speedtest        Run network speed test
+    dns <domain>     Query DNS information
+    whois <domain>   Lookup WHOIS information
+    
+EOF
+}
+
+# Version information
+show_version() {
+    echo "IPNMT 3 - IP Network Management Tool v3.0.0"
+    echo "Built: $(date +%Y-%m-%d)"
+    echo "Shell: $BASH_VERSION"
+    echo "System: $(uname -srm)"
+}
+
+# ============================================================================
+# NETWORK INFORMATION COMMANDS
+# ============================================================================
+
+# List all network interfaces
+cmd_ifaces() {
+    echo -e "${BLUE}=== Network Interfaces ===${NC}"
+    
+    # Get interface list
+    ifaces=$(ip -o link show | awk -F': ' '{print $2}')
+    
+    if [ -z "$ifaces" ]; then
+        echo "No network interfaces found."
+        return 1
+    fi
+    
+    # Header
+    printf "%-15s %-10s %-20s %-20s\n" "INTERFACE" "STATE" "MAC" "IP"
+    echo "----------------------------------------------------------------"
+    
+    for iface in $ifaces; do
+        # Get interface state
+        state=$(ip link show "$iface" | grep -oP 'state \K\w+')
+        
+        # Get MAC address
+        mac=$(ip link show "$iface" | grep -oP 'link/ether \K[\w:]+')
+        
+        # Get IP address
+        ip_addr=$(ip -4 addr show "$iface" 2>/dev/null | grep -oP 'inet \K[\d.]+' | head -1)
+        
+        # Format output
+        [ -z "$state" ] && state="UNKNOWN"
+        [ -z "$mac" ] && mac="N/A"
+        [ -z "$ip_addr" ] && ip_addr="N/A"
+        
+        printf "%-15s %-10s %-20s %-20s\n" "$iface" "$state" "$mac" "$ip_addr"
+    done
+}
+
+# Show details for specific interface
+cmd_iface() {
+    local iface=$1
+    
+    if [ -z "$iface" ]; then
+        error_exit "Please specify an interface name"
+    fi
+    
+    if ! ip link show "$iface" &>/dev/null; then
+        error_exit "Interface '$iface' not found"
+    fi
+    
+    echo -e "${BLUE}=== Interface Details: $iface ===${NC}"
+    echo ""
+    
+    # Basic info
+    echo -e "${YELLOW}Basic Information:${NC}"
+    ip link show "$iface"
+    echo ""
+    
+    # IP addresses
+    echo -e "${YELLOW}IP Addresses:${NC}"
+    ip addr show "$iface"
+    echo ""
+    
+    # Statistics
+    echo -e "${YELLOW}Statistics:${NC}"
+    cat /sys/class/net/"$iface"/statistics/* 2>/dev/null || echo "Statistics not available"
+    echo ""
+    
+    # Driver info
+    echo -e "${YELLOW}Driver Information:${NC}"
+    ethtool -i "$iface" 2>/dev/null || echo "ethtool not available"
+}
+
+# Show IP addresses
+cmd_ip() {
+    echo -e "${BLUE}=== IP Addresses ===${NC}"
+    ip addr show
+}
+
+# Show routing table
+cmd_routes() {
+    echo -e "${BLUE}=== Routing Table ===${NC}"
+    ip route show
+}
+
+# Show ARP cache
+cmd_arp() {
+    echo -e "${BLUE}=== ARP Cache ===${NC}"
+    arp -n
+}
+
+# Show network connections
+cmd_netstat() {
+    echo -e "${BLUE}=== Network Connections ===${NC}"
+    
+    if command -v ss &>/dev/null; then
+        ss -tulnp
+    elif command -v netstat &>/dev/null; then
+        netstat -tulnp
+    else
+        error_exit "Neither ss nor netstat is available"
+    fi
+}
+
+# ============================================================================
+# NETWORK DEBUGGING COMMANDS
+# ============================================================================
+
+# Ping with detailed output
+cmd_ping() {
+    local host=$1
+    
+    if [ -z "$host" ]; then
+        error_exit "Please specify a host to ping"
+    fi
+    
+    echo -e "${BLUE}=== Pinging $host ===${NC}"
+    
+    # Check if host is reachable
+    if ! ping -c 1 -W 2 "$host" &>/dev/null; then
+        echo -e "${RED}Host $host is not reachable${NC}"
+        return 1
+    fi
+    
+    # Detailed ping
+    echo -e "${YELLOW}Basic Ping Test:${NC}"
+    ping -c 4 "$host"
+    echo ""
+    
+    # Continuous ping with statistics
+    echo -e "${YELLOW}Extended Statistics (10 packets):${NC}"
+    ping -c 10 "$host"
+}
+
+# Traceroute
+cmd_traceroute() {
+    local host=$1
+    
+    if [ -z "$host" ]; then
+        error_exit "Please specify a host for traceroute"
+    fi
+    
+    echo -e "${BLUE}=== Traceroute to $host ===${NC}"
+    
+    if command -v traceroute &>/dev/null; then
+        traceroute "$host"
+    elif command -v tracepath &>/dev/null; then
+        tracepath "$host"
+    elif command -v mtr &>/dev/null; then
+        mtr --report "$host"
+    else
+        error_exit "No traceroute utility found"
+    fi
+}
+
+# Iperf test
+cmd_iperf() {
+    local host=$1
+    
+    if [ -z "$host" ]; then
+        error_exit "Please specify a host for iperf test"
+    fi
+    
+    echo -e "${BLUE}=== Iperf Test to $host ===${NC}"
+    
+    if ! command -v iperf3 &>/dev/null; then
+        error_exit "iperf3 is not installed. Please install it first."
+    fi
+    
+    echo "Starting iperf3 client to $host..."
+    iperf3 -c "$host"
+}
+
+# Tcpdump capture
+cmd_tcpdump() {
+    check_root
+    
+    echo -e "${BLUE}=== Packet Capture (tcpdump) ===${NC}"
+    echo "Starting tcpdump on all interfaces..."
+    echo "Press Ctrl+C to stop capture"
+    echo ""
+    
+    if ! command -v tcpdump &>/dev/null; then
+        error_exit "tcpdump is not installed. Please install it first."
+    fi
+    
+    tcpdump -i any -n -v
+}
+
+# Packet sniffing
+cmd_sniff() {
+    check_root
+    
+    echo -e "${BLUE}=== Packet Sniffing ===${NC}"
+    
+    local iface="${1:-any}"
+    local count="${2:-100}"
+    
+    echo "Sniffing $count packets on interface $iface..."
+    
+    if ! command -v tcpdump &>/dev/null; then
+        error_exit "tcpdump is not installed"
+    fi
+    
+    tcpdump -i "$iface" -c "$count" -n -v
+}
+
+# ============================================================================
+# KERNEL-LEVEL TOOLS
+# ============================================================================
+
+# Kernel network info
+cmd_kernel_info() {
+    echo -e "${BLUE}=== Kernel Network Configuration ===${NC}"
+    
+    echo -e "${YELLOW}Kernel Version:${NC}"
+    uname -a
+    echo ""
+    
+    echo -e "${YELLOW}Network-related Kernel Modules:${NC}"
+    lsmod | grep -E 'ipv6|tcp|udp|net|eth|wlan|wireless|80211'
+    echo ""
+    
+    echo -e "${YELLOW}Network Stack Parameters:${NC}"
+    sysctl net.ipv4
+    echo ""
+    
+    echo -e "${YELLOW}Loaded Kernel Modules:${NC}"
+    lsmod
+}
+
+# Sysctl management
+cmd_sysctl() {
+    local key="${1:-}"
+    
+    echo -e "${BLUE}=== Sysctl Network Parameters ===${NC}"
+    
+    if [ -z "$key" ]; then
+        # Show all network-related sysctl parameters
+        sysctl -a | grep -E '^net\.' | sort
+    else
+        # Show or set specific parameter
+        if [[ "$key" == *"="* ]]; then
+            # Setting a value
+            check_root
+            local param=$(echo "$key" | cut -d'=' -f1)
+            local value=$(echo "$key" | cut -d'=' -f2-)
+            sysctl -w "$param"="$value"
+            echo "Set $param = $value"
+        else
+            # Getting a value
+            sysctl "$key"
+        fi
+    fi
+}
+
+# Iptables
+cmd_iptables() {
+    check_root
+    
+    echo -e "${BLUE}=== Iptables Rules ===${NC}"
+    
+    if ! command -v iptables &>/dev/null; then
+        error_exit "iptables is not installed"
+    fi
+    
+    echo -e "${YELLOW}Filter Table:${NC}"
+    iptables -L -n -v
+    echo ""
+    
+    echo -e "${YELLOW}NAT Table:${NC}"
+    iptables -t nat -L -n -v
+    echo ""
+    
+    echo -e "${YELLOW}Mangle Table:${NC}"
+    iptables -t mangle -L -n -v
+}
+
+# Nftables
+cmd_nftables() {
+    check_root
+    
+    echo -e "${BLUE}=== Nftables Rules ===${NC}"
+    
+    if ! command -v nft &>/dev/null; then
+        error_exit "nftables is not installed"
+    fi
+    
+    nft list ruleset
+}
+
+# Ethtool
+cmd_ethtool() {
+    local iface="${1:-}"
+    
+    if [ -z "$iface" ]; then
+        error_exit "Please specify an interface"
+    fi
+    
+    if ! ip link show "$iface" &>/dev/null; then
+        error_exit "Interface '$iface' not found"
+    fi
+    
+    if ! command -v ethtool &>/dev/null; then
+        error_exit "ethtool is not installed"
+    fi
+    
+    echo -e "${BLUE}=== Ethtool Information for $iface ===${NC}"
+    ethtool "$iface"
+    echo ""
+    
+    echo -e "${YELLOW}Driver Information:${NC}"
+    ethtool -i "$iface"
+    echo ""
+    
+    echo -e "${YELLOW}Statistics:${NC}"
+    ethtool -S "$iface"
+}
+
+# ============================================================================
+# WIFI CONTROLLER COMMANDS
+# ============================================================================
+
+# WiFi scan
+cmd_wifi_scan() {
+    echo -e "${BLUE}=== WiFi Network Scan ===${NC}"
+    
+    # Find WiFi interfaces
+    local wifi_ifaces=()
+    for iface in $(ip -o link show | awk -F': ' '{print $2}'); do
+        if ip link show "$iface" | grep -q 'wireless'; then
+            wifi_ifaces+=("$iface")
+        fi
+    done
+    
+    if [ ${#wifi_ifaces[@]} -eq 0 ]; then
+        error_exit "No WiFi interfaces found"
+    fi
+    
+    echo "Found WiFi interfaces: ${wifi_ifaces[*]}"
+    echo ""
+    
+    # Use the first WiFi interface
+    local wifi_iface="${wifi_ifaces[0]}"
+    echo -e "${YELLOW}Scanning on $wifi_iface...${NC}"
+    
+    if command -v iw &>/dev/null; then
+        sudo iw dev "$wifi_iface" scan | grep -E 'BSS|SSID|signal|freq|capability'
+    elif command -v iwlist &>/dev/null; then
+        sudo iwlist "$wifi_iface" scanning
+    else
+        error_exit "Neither iw nor iwlist is available"
+    fi
+}
+
+# WiFi connect
+cmd_wifi_connect() {
+    local ssid="${1:-}"
+    local password="${2:-}"
+    
+    if [ -z "$ssid" ]; then
+        error_exit "Please specify SSID"
+    fi
+    
+    echo -e "${BLUE}=== Connecting to WiFi: $ssid ===${NC}"
+    
+    # Find WiFi interfaces
+    local wifi_ifaces=()
+    for iface in $(ip -o link show | awk -F': ' '{print $2}'); do
+        if ip link show "$iface" | grep -q 'wireless'; then
+            wifi_ifaces+=("$iface")
+        fi
+    done
+    
+    if [ ${#wifi_ifaces[@]} -eq 0 ]; then
+        error_exit "No WiFi interfaces found"
+    fi
+    
+    local wifi_iface="${wifi_ifaces[0]}"
+    echo "Using WiFi interface: $wifi_iface"
+    
+    # Method 1: Using nmcli (NetworkManager)
+    if command -v nmcli &>/dev/null; then
+        echo "Using NetworkManager..."
+        if [ -n "$password" ]; then
+            nmcli device wifi connect "$ssid" password "$password" ifname "$wifi_iface"
+        else
+            nmcli device wifi connect "$ssid" ifname "$wifi_iface"
+        fi
+        return $?
+    fi
+    
+    # Method 2: Using wpa_supplicant
+    if command -v wpa_supplicant &>/dev/null; then
+        check_root
+        echo "Using wpa_supplicant..."
+        
+        local config_file="$CONFIG_DIR/wpa_supplicant_$wifi_iface.conf"
+        
+        if [ -n "$password" ]; then
+            cat > "$config_file" << EOF
+network={
+    ssid="$ssid"
+    psk="$password"
+}
+EOF
+        else
+            cat > "$config_file" << EOF
+network={
+    ssid="$ssid"
+    key_mgmt=NONE
+}
+EOF
+        fi
+        
+        echo "Starting wpa_supplicant..."
+        wpa_supplicant -B -i "$wifi_iface" -c "$config_file"
+        sleep 5
+        
+        if command -v dhclient &>/dev/null; then
+            dhclient "$wifi_iface"
+        elif command -v dhcpcd &>/dev/null; then
+            dhcpcd "$wifi_iface"
+        fi
+        
+        return $?
+    fi
+    
+    error_exit "No WiFi connection method available (need nmcli or wpa_supplicant)"
+}
+
+# WiFi disconnect
+cmd_wifi_disconnect() {
+    echo -e "${BLUE}=== Disconnecting from WiFi ===${NC}"
+    
+    local wifi_ifaces=()
+    for iface in $(ip -o link show | awk -F': ' '{print $2}'); do
+        if ip link show "$iface" | grep -q 'wireless'; then
+            wifi_ifaces+=("$iface")
+        fi
+    done
+    
+    if [ ${#wifi_ifaces[@]} -eq 0 ]; then
+        error_exit "No WiFi interfaces found"
+    fi
+    
+    local wifi_iface="${wifi_ifaces[0]}"
+    echo "Using WiFi interface: $wifi_iface"
+    
+    if command -v nmcli &>/dev/null; then
+        nmcli device disconnect "$wifi_iface"
+        return $?
+    fi
+    
+    check_root
+    ip link set "$wifi_iface" down
+    sleep 2
+    ip link set "$wifi_iface" up
+    echo "WiFi interface $wifi_iface has been disconnected"
+}
+
+# WiFi info
+cmd_wifi_info() {
+    echo -e "${BLUE}=== WiFi Connection Information ===${NC}"
+    
+    local wifi_ifaces=()
+    for iface in $(ip -o link show | awk -F': ' '{print $2}'); do
+        if ip link show "$iface" | grep -q 'wireless'; then
+            wifi_ifaces+=("$iface")
+        fi
+    done
+    
+    if [ ${#wifi_ifaces[@]} -eq 0 ]; then
+        error_exit "No WiFi interfaces found"
+    fi
+    
+    local wifi_iface="${wifi_ifaces[0]}"
+    echo "WiFi Interface: $wifi_iface"
+    
+    if command -v iw &>/dev/null; then
+        echo -e "${YELLOW}Connection Status:${NC}"
+        iw dev "$wifi_iface" link
+        echo ""
+    fi
+    
+    if command -v iwconfig &>/dev/null; then
+        echo -e "${YELLOW}Wireless Config:${NC}"
+        iwconfig "$wifi_iface"
+        echo ""
+    fi
+    
+    echo -e "${YELLOW}IP Address:${NC}"
+    ip addr show "$wifi_iface"
+    echo ""
+    
+    echo -e "${YELLOW}Signal Strength:${NC}"
+    if command -v iw &>/dev/null; then
+        iw dev "$wifi_iface" link | grep signal
+    fi
+}
+
+# WiFi list interfaces
+cmd_wifi_list() {
+    echo -e "${BLUE}=== Available WiFi Interfaces ===${NC}"
+    
+    local wifi_ifaces=()
+    for iface in $(ip -o link show | awk -F': ' '{print $2}'); do
+        if ip link show "$iface" | grep -q 'wireless'; then
+            wifi_ifaces+=("$iface")
+        fi
+    done
+    
+    if [ ${#wifi_ifaces[@]} -eq 0 ]; then
+        echo "No WiFi interfaces found."
+        return 0
+    fi
+    
+    printf "%-15s %-10s %-20s\n" "INTERFACE" "STATE" "MAC"
+    echo "----------------------------------------"
+    
+    for iface in "${wifi_ifaces[@]}"; do
+        local state=$(ip link show "$iface" | grep -oP 'state \K\w+')
+        local mac=$(ip link show "$iface" | grep -oP 'link/ether \K[\w:]+')
+        
+        [ -z "$state" ] && state="UNKNOWN"
+        [ -z "$mac" ] && mac="N/A"
+        
+        printf "%-15s %-10s %-20s\n" "$iface" "$state" "$mac"
+    done
+}
+
+# ============================================================================
+# ADVANCED COMMANDS
+# ============================================================================
+
+# Raw socket operations
+cmd_socket() {
+    echo -e "${BLUE}=== Raw Socket Operations ===${NC}"
+    cat << "EOF"
+Raw socket operations require custom implementation.
+This feature is placeholder for:
+- Creating raw sockets
+- Sending custom packets
+- Receiving low-level network data
+
+For now, you can use:
+- Python with socket module
+- C with raw socket API
+- Scapy for packet crafting
+
+Example with Python:
+    python3 -c "import socket; s = socket.socket(socket.AF_PACKET, socket.SOCK_RAW); print(s)"
+EOF
+}
+
+# BPF filters
+cmd_bpfilter() {
+    check_root
+    echo -e "${BLUE}=== BPF Filter Management ===${NC}"
+    
+    if ! command -v bpfilter &>/dev/null && ! command -v bpftool &>/dev/null; then
+        error_exit "BPF tools (bpfilter or bpftool) are not available"
+    fi
+    
+    if command -v bpftool &>/dev/null; then
+        echo "BPF Tool:"
+        bpftool --version
+        echo ""
+        echo -e "${YELLOW}Loaded BPF Programs:${NC}"
+        bpftool prog show
+        echo ""
+        echo -e "${YELLOW}BPF Maps:${NC}"
+        bpftool map show
+    fi
+}
+
+# Network namespaces
+cmd_netns() {
+    check_root
+    echo -e "${BLUE}=== Network Namespaces ===${NC}"
+    
+    if ! command -v ip &>/dev/null; then
+        error_exit "ip command is not available"
+    fi
+    
+    case "${1:-}" in
+        list)
+            echo -e "${YELLOW}Available Network Namespaces:${NC}"
+            ip netns list
+            ;;
+        create)
+            local name="${2:-}"
+            if [ -z "$name" ]; then
+                error_exit "Please specify a namespace name"
+            fi
+            ip netns add "$name"
+            echo "Created network namespace: $name"
+            ;;
+        delete)
+            local name="${2:-}"
+            if [ -z "$name" ]; then
+                error_exit "Please specify a namespace name"
+            fi
+            ip netns delete "$name"
+            echo "Deleted network namespace: $name"
+            ;;
+        exec)
+            local name="${2:-}"
+            local cmd="${3:-}"
+            if [ -z "$name" ] || [ -z "$cmd" ]; then
+                error_exit "Usage: ipnmt netns exec <namespace> <command>"
+            fi
+            ip netns exec "$name" "$cmd"
+            ;;
+        *)
+            echo "Usage: ipnmt netns [list|create <name>|delete <name>|exec <name> <command>]"
+            ip netns list
+            ;;
+    esac
+}
+
+# ============================================================================
+# UTILITY COMMANDS
+# ============================================================================
+
+# Speed test
+cmd_speedtest() {
+    echo -e "${BLUE}=== Network Speed Test ===${NC}"
+    
+    if command -v speedtest-cli &>/dev/null; then
+        echo "Running speedtest-cli..."
+        speedtest-cli
+    elif command -v curl &>/dev/null; then
+        echo "Running simple speed test using curl..."
+        echo "Testing download speed..."
+        local start_time=$(date +%s.%N)
+        local url="https://speedtest.ftp.otenet.gr/files/test100Mb.db"
+        curl -s -o /dev/null "$url"
+        local end_time=$(date +%s.%N)
+        
+        local runtime=$(echo "$end_time - $start_time" | bc)
+        local size_mb=100
+        local speed_mbps=$(echo "scale=2; $size_mb / $runtime * 8" | bc)
+        
+        echo "Download speed: ${speed_mbps} Mbps"
+        
+        echo "Testing upload speed..."
+        start_time=$(date +%s.%N)
+        dd if=/dev/zero bs=1M count=100 | curl -s -T - "$url"
+        end_time=$(date +%s.%N)
+        
+        runtime=$(echo "$end_time - $start_time" | bc)
+        speed_mbps=$(echo "scale=2; $size_mb / $runtime * 8" | bc)
+        echo "Upload speed: ${speed_mbps} Mbps"
+    else
+        error_exit "Neither speedtest-cli nor curl is available"
+    fi
+}
+
+# DNS query
+cmd_dns() {
+    local domain="${1:-}"
+    
+    if [ -z "$domain" ]; then
+        error_exit "Please specify a domain name"
+    fi
+    
+    echo -e "${BLUE}=== DNS Query for $domain ===${NC}"
+    
+    if command -v dig &>/dev/null; then
+        dig "$domain"
+    elif command -v nslookup &>/dev/null; then
+        nslookup "$domain"
+    elif command -v host &>/dev/null; then
+        host "$domain"
+    else
+        echo "Using getent..."
+        getent hosts "$domain"
+    fi
+}
+
+# WHOIS lookup
+cmd_whois() {
+    local domain="${1:-}"
+    
+    if [ -z "$domain" ]; then
+        error_exit "Please specify a domain or IP"
+    fi
+    
+    echo -e "${BLUE}=== WHOIS Lookup for $domain ===${NC}"
+    
+    if command -v whois &>/dev/null; then
+        whois "$domain"
+    else
+        error_exit "whois command is not installed"
+    fi
+}
+
+# ============================================================================
+# MAIN EXECUTION
+# ============================================================================
+
+# Parse arguments
+DEBUG=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_banner
+            show_help
+            exit 0
+            ;;
+        -v|--version)
+            show_version
+            exit 0
+            ;;
+        -d|--debug)
+            DEBUG=true
+            shift
+            ;;
+        -*)
+            error_exit "Unknown option: $1"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+# Enable debug logging if requested
+if [ "$DEBUG" = true ]; then
+    set -x
+    log "DEBUG" "Debug mode enabled"
+fi
+
+# Show banner if not in debug mode and not a help/version request
+if [ $# -gt 0 ]; then
+    show_banner
+fi
+
+# Main command dispatch
+if [ $# -eq 0 ]; then
+    show_help
+    exit 0
+fi
+
+COMMAND=$1
+shift
+
+# Map commands to functions
+case $COMMAND in
+    # Network Information
+    ifaces|iface|ip|routes|arp|netstat)
+        cmd_$COMMAND "$@"
+        ;;
+    # Network Debugging
+    ping|traceroute|iperf|tcpdump|sniff)
+        cmd_$COMMAND "$@"
+        ;;
+    # Kernel-Level Tools
+    kernel-info|sysctl|iptables|nftables|ethtool)
+        cmd_$COMMAND "$@"
+        ;;
+    # WiFi Controller
+    wifi-scan|wifi-connect|wifi-disconnect|wifi-info|wifi-list)
+        cmd_$COMMAND "$@"
+        ;;
+    # Advanced
+    socket|bpfilter|netns)
+        cmd_$COMMAND "$@"
+        ;;
+    # Utilities
+    speedtest|dns|whois)
+        cmd_$COMMAND "$@"
+        ;;
+    # Help
+    help|--help|-h)
+        show_help
+        ;;
+    # Version
+    version|--version|-v)
+        show_version
+        ;;
+    *)
+        error_exit "Unknown command: $COMMAND. Use 'ipnmt --help' for usage."
+        ;;
+esac
+
+exit 0
